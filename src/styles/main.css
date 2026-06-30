@@ -521,3 +521,63 @@ body.audio-active .radar-ring {
     opacity: 1;
   }
 }
+
+.debug-vu {
+  position: fixed;
+  top: 28px;
+  right: 8px;
+  width: 120px;
+  padding: 6px 8px;
+  background: rgba(8, 8, 10, 0.92);
+  border: 1px solid #252530;
+  z-index: 900;
+  font-family: var(--term);
+  font-size: 8px;
+  color: var(--text-dim);
+}
+
+.debug-vu.hidden {
+  display: none;
+}
+
+.debug-vu-label {
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  color: var(--cyan);
+  opacity: 0.6;
+}
+
+.debug-vu-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 8px;
+  margin-bottom: 2px;
+}
+
+.debug-vu-bar span:first-child {
+  width: 28px;
+  font-size: 7px;
+}
+
+.debug-vu-bar span:last-child {
+  flex: 1;
+  height: 4px;
+  background: #1a1a22;
+  position: relative;
+}
+
+.debug-vu-bar span:last-child::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: calc(var(--vu, 0) * 100%);
+  background: var(--cyan);
+  box-shadow: 0 0 4px rgba(0, 240, 255, 0.4);
+}
+
+.debug-vu-bar.peak span:last-child::after {
+  background: var(--pink);
+}

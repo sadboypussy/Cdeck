@@ -16,7 +16,7 @@
     <div class="device" id="device">
       <header class="topbar">
         <span class="topbar-label">CYBER-DECK</span>
-        <span class="topbar-status" id="reactivity-indicator">● REACT</span>
+        <span class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D debug audio">● REACT</span>
         <span class="topbar-clock" id="clock">--:--</span>
       </header>
 
@@ -110,6 +110,11 @@
         />
         <ul class="hud-results" id="hud-results"></ul>
       </div>
+    </div>
+
+    <div class="debug-vu hidden" id="debug-vu" aria-hidden="true">
+      <div class="debug-vu-label">DEBUG VU — Ctrl+Shift+D</div>
+      <div class="debug-vu-bars" id="debug-vu-bars"></div>
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>

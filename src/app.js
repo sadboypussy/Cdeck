@@ -17,6 +17,7 @@ async function init() {
   setupTabs();
   setupEditor();
   setupHud();
+  setupDebugVu();
   setupPlayer();
   await initAudioReactive();
   applyAudioReactive();
@@ -244,6 +245,37 @@ function makeNode(id, x, y, isCenter) {
   }
 
   return g;
+}
+
+function setupDebugVu() {
+  const panel = $("#debug-vu");
+  const labels = ["sub", "bas", "lo", "mid", "hi", "pk"];
+  const bars = $("#debug-vu-bars");
+  bars.innerHTML = labels
+    .map(
+      (l) =>
+        `<div class="debug-vu-bar" data-band="${l}"><span>${l}</span><span style="--vu:0"></span></div>`
+    )
+    .join("");
+
+  const toggle = () => panel.classList.toggle("hidden");
+
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === "D") {
+      e.preventDefault();
+      toggle();
+    }
+  });
+  $("#reactivity-indicator").addEventListener("click", toggle);
+
+  onBands((bandValues) => {
+    if (panel.classList.contains("hidden")) return;
+    panel.querySelectorAll(".debug-vu-bar").forEach((row, i) => {
+      const v = bandValues[i] ?? 0;
+      row.querySelector("span:last-child").style.setProperty("--vu", v);
+      row.classList.toggle("peak", i === 5 && v > PEAK_LINK_THRESHOLD);
+    });
+  });
 }
 
 function setupHud() {
