@@ -1,0 +1,24 @@
+---
+description: Vault Markdown, wikilinks, persistance et modèle de données notes
+globs: src-tauri/src/notes.rs,src-tauri/src/commands.rs,notes/**,src/app.js
+alwaysApply: false
+---
+
+# Notes — Zettelkasten léger
+
+## Persistance V1
+- Un fichier `.md` par note dans le vault local (`AppData` en prod)
+- Frontmatter YAML optionnel pour tags ; `#tag` inline aussi accepté
+- Résolution : `[[NomNote]]` → `NomNote.md` (espaces → `_`)
+- Autosave debounce on edit · `neighbors` **dérivés** du parsing wikilinks, jamais dupliqués manuellement
+
+## Navigation
+- Clic wikilink dans éditeur → pivot note + sync radar
+- Clic nœud radar → pivot
+- Ctrl+P : recherche/ouverture par nom/id (V1 scope strict)
+
+## Scope éditeur
+Minimaliste : pas de features Obsidian (plugins, preview riche, graphe global). Suffisent wikilinks + autosave + tags.
+
+## MOCK_DB seed (5 notes)
+`PROTOCOLE_REINITIALISATION`, `WASAPI`, `Annexe_A_Pipeline`, `Tauri_Shell`, `Syrex_Nightcore`.

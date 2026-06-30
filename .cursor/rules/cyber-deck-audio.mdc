@@ -1,0 +1,32 @@
+---
+description: Pipeline audio-réactif et principes musicaux (PDD §3, §7)
+globs: src-tauri/src/audio/**,audio-spike/**,src/audio-reactive.js
+alwaysApply: false
+---
+
+# Audio — musical, pas Winamp
+
+## Pipeline (ordre strict)
+WASAPI loopback → buffer → FFT (`rustfft`) → pondération log/A-weighting → **4–8 bandes 0.0–1.0** → `tauri::emit` (~30–60 Hz) → CSS subtil.
+
+**Interdit** : émettre le spectre FFT brut par IPC.
+
+## Principes musicaux V1
+- Amplitude max ~**3 %** sur texte (letter-spacing, text-shadow, glow)
+- Pulses liens/radar : transitoires significatifs (kick/snare), pas chaque frame FFT
+- Silence > ~2 s → retour repos progressif, pas coupure brutale
+- Loopback = mix système entier (limitation acceptée V1)
+
+## Stack
+- Crate `wasapi` (pas cpal) · Windows only V1
+- Reconnexion auto si changement périphérique sortie (A.5)
+
+## Effets V1 cibles
+| Effet | Cible | Signal |
+|-------|-------|--------|
+| Respiration titres | `#`, `##` | Basses 20–150 Hz |
+| Pulse liens | `[[...]]` | Crêtes / transitoires |
+| Respiration radar | anneaux, nœuds | Énergie moyenne |
+| Transition note | changement note | énergie ~2 dernières secondes |
+
+Spike CLI indépendant : `audio-spike/` — valider loopback avant intégration Tauri.

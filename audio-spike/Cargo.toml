@@ -1,0 +1,14 @@
+[package]
+name = "audio-spike"
+version = "0.1.0"
+edition = "2021"
+description = "Cyber-Deck Branche B — spike WASAPI loopback + FFT"
+
+[[bin]]
+name = "audio-spike"
+path = "src/main.rs"
+
+[dependencies]
+wasapi = "0.19"
+rustfft = "6"
+realfft = "3"

@@ -1,0 +1,28 @@
+---
+description: Layout, esthétique Glitch-Decoder et composants UI V1
+globs: src/**,src/index.html
+alwaysApply: false
+---
+
+# UI — Layout & esthétique
+
+## Layout portrait 9:16
+- Zone supérieure **≈ 1/3** : miniature YouTube (filtre cyber-scanner), titre `DATA_STREAM //`, contrôles terminal
+- Zone inférieure **≈ 2/3** : éditeur OU radar (toggle, jamais les deux)
+- Barre statut : LN/COL, sync, version — pas de surcharge démo
+
+## Palette (mockup référence)
+- `--bg-main: #08080a` · `--cyan: #00f0ff` · `--pink: #ff0055`
+- Fonts : JetBrains Mono, Share Tech Mono, Inter
+
+## Composants identifiés
+`.device` · `.topbar` · `.audio-tier` · `.tabswitch` · `.workzone` · `.hud-overlay` · `.statusbar`
+
+## Radar proximité
+- Note active centre · max 4 voisins géométriques · clic = pivot
+- Anneaux concentriques + sweep ~4 s/tour · labels au hover seulement
+
+## Esthétique vs musicalité
+Cadre cyberpunk = identité. Musicalité subtile = comportement vivant. **En conflit, la musicalité prime.**
+
+YouTube : IFrame Player API officielle · CSP autorise youtube.com / ytimg.com.

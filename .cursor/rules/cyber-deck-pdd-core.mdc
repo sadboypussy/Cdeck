@@ -1,0 +1,32 @@
+---
+description: Vérité produit Cyber-Deck — vision, scope V1, rejets explicites du PDD
+alwaysApply: true
+---
+
+# Cyber-Deck — PDD V1.1 (vérité produit)
+
+**Pitch** : compagnon de concentration second écran — espace de réflexion qui respire avec la musique. Pas un lecteur + notes + graphe.
+
+**Chaîne de valeur** : Musique → Ambiance → Concentration → Pensée → Navigation.
+
+## V1 inclus
+- Tauri, portrait 9:16 fixe (~380×780), Windows only
+- YouTube IFrame API (pas yt-dlp / extraction)
+- Éditeur Markdown minimal + `[[wikilinks]]` + vault fichiers locaux
+- Graphe **proximité** uniquement : note active + voisins 1er degré (max 4 affichés)
+- Toggle Notes / Radar (pas les deux simultanément)
+- Capture audio WASAPI loopback + bandes agrégées Rust → `emit` Tauri
+- Ctrl+P palette recherche notes · Escape ferme HUD · tags sous la note
+
+## Rejets V1 (ne pas réintroduire)
+- `Alt+Espace`, halo focus deck, badges raccourcis permanents
+- Vumètre permanent en UI principale (debug/settings seulement)
+- Labels radar toujours visibles (hover/clic)
+- Graphe global, layout 16:9, widgets RSS/todo/monitor
+- cpal pour loopback (utiliser crate `wasapi`)
+- Spectre FFT brut via IPC (agrégation 4–8 floats côté Rust obligatoire)
+
+## Budget polish (80/20)
+80 % navigation idées + subtilité musicale · 20 % esthétique cyberpunk décorative.
+
+Référence complète : `PDD Cyber-Deck V2.md`.

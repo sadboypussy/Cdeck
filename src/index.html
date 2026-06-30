@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cyber-Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;600&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/main.css" />
+  </head>
+  <body>
+    <div class="device" id="device">
+      <header class="topbar">
+        <span class="topbar-label">CYBER-DECK</span>
+        <span class="topbar-status" id="reactivity-indicator">● REACT</span>
+        <span class="topbar-clock" id="clock">--:--</span>
+      </header>
+
+      <section class="audio-tier" id="audio-tier">
+        <div class="scanner-frame">
+          <div id="yt-player" class="yt-player"></div>
+          <div class="scanner-overlay"></div>
+        </div>
+        <div class="track-info">
+          <div class="data-stream" id="track-title">
+            DATA_STREAM // SYREX NIGHTCORE
+          </div>
+        </div>
+        <div class="terminal-controls">
+          <button class="term-btn" id="btn-prev" title="Précédent">◀◀</button>
+          <button class="term-btn term-btn-primary" id="btn-play" title="Play/Pause">
+            ▶
+          </button>
+          <button class="term-btn" id="btn-next" title="Suivant">▶▶</button>
+          <input
+            type="range"
+            class="volume-slider"
+            id="volume"
+            min="0"
+            max="100"
+            value="60"
+          />
+        </div>
+      </section>
+
+      <nav class="tabswitch">
+        <button class="tab active" data-tab="notes" id="tab-notes">[ NOTES ]</button>
+        <button class="tab" data-tab="radar" id="tab-radar">[ RADAR ]</button>
+      </nav>
+
+      <main class="workzone">
+        <div class="panel panel-notes active" id="panel-notes">
+          <textarea
+            class="editor"
+            id="editor"
+            spellcheck="false"
+            placeholder="# Nouvelle note..."
+          ></textarea>
+          <div class="tags-bar" id="tags-bar"></div>
+        </div>
+        <div class="panel panel-radar" id="panel-radar">
+          <svg class="radar-svg" id="radar-svg" viewBox="0 0 300 300">
+            <defs>
+              <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.15" />
+                <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="150" cy="150" r="120" class="radar-ring ring-1" />
+            <circle cx="150" cy="150" r="85" class="radar-ring ring-2" />
+            <circle cx="150" cy="150" r="50" class="radar-ring ring-3" />
+            <circle cx="150" cy="150" r="120" fill="url(#radar-glow)" />
+            <line
+              class="radar-sweep"
+              x1="150"
+              y1="150"
+              x2="150"
+              y2="30"
+            />
+            <g id="radar-links"></g>
+            <g id="radar-nodes"></g>
+          </svg>
+          <div class="radar-tooltip" id="radar-tooltip"></div>
+        </div>
+      </main>
+
+      <footer class="statusbar">
+        <span id="cursor-pos">LN 1 · COL 1</span>
+        <span id="sync-status">SYNC OK</span>
+        <span>v0.1</span>
+      </footer>
+    </div>
+
+    <div class="hud-overlay hidden" id="hud">
+      <div class="hud-panel">
+        <div class="hud-header">⌘ PALETTE — Ctrl+P</div>
+        <input
+          type="text"
+          class="hud-input"
+          id="hud-input"
+          placeholder="Rechercher une note..."
+          autocomplete="off"
+        />
+        <ul class="hud-results" id="hud-results"></ul>
+      </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
