@@ -5,6 +5,9 @@ const SILENCE_THRESHOLD_MS = 2000;
 /** PDD §3.1 — amplitude max ~3 % sur texte */
 const MAX_VISUAL_AMPLITUDE = 0.03;
 const PEAK_LINK_THRESHOLD = 0.25;
+const INTENSITY_KEY = "cyber-deck-intensity";
+
+let intensity = loadIntensity();
 
 let bands = new Array(BAND_COUNT).fill(0);
 let smoothedVisual = { energy: 0, bass: 0, peak: 0 };
@@ -15,6 +18,23 @@ let intervalId = null;
 let usingRust = false;
 
 const listeners = new Set();
+
+function loadIntensity() {
+  const v = parseInt(localStorage.getItem(INTENSITY_KEY) ?? "100", 10);
+  return Number.isFinite(v) ? v / 100 : 1;
+}
+
+export function setIntensity(factor) {
+  intensity = Math.max(0.25, Math.min(2, factor));
+  localStorage.setItem(INTENSITY_KEY, String(Math.round(intensity * 100)));
+  document.documentElement.style.setProperty("--intensity", intensity.toFixed(2));
+}
+
+export function getIntensity() {
+  return intensity;
+}
+
+document.documentElement.style.setProperty("--intensity", intensity.toFixed(2));
 
 export function getBands() {
   return [...bands];
@@ -65,11 +85,11 @@ function applyVisuals(bass, energy, peak, silent) {
   );
   document.documentElement.style.setProperty(
     "--bass-delta",
-    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * 0.08).toFixed(4)}em`
+    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 0.08).toFixed(4)}em`
   );
   document.documentElement.style.setProperty(
     "--bass-glow",
-    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * 200).toFixed(1)}px`
+    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 200).toFixed(1)}px`
   );
 
   document.body.classList.toggle("audio-active", !silent);

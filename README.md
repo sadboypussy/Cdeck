@@ -48,8 +48,8 @@ Capture loopback WASAPI → FFT → 6 bandes agrégées → vumètre terminal.
 
 ## Prochaine étape
 
-1. Mode debug vumètre (settings) — PDD §3.4
-2. Affinage seuils en usage réel (pollution Discord, etc.)
-3. Création note via Ctrl+P (V2)
+1. Affinage seuils en usage réel (retours terrain)
+2. Création note via Ctrl+P (V2 PDD)
+3. Raccourci global Ctrl+P hors focus (optionnel)
 
 Voir `PDD Cyber-Deck V2.md` pour le design complet.

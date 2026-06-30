@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { initAudioReactive, onBands, getRecentEnergy, PEAK_LINK_THRESHOLD } from "./audio-reactive.js";
+import { initAudioReactive, onBands, getRecentEnergy, PEAK_LINK_THRESHOLD, setIntensity, getIntensity } from "./audio-reactive.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
 const YT_PLAYLIST = "PLrAXtmRdnEQy6nuLMH8k8C_4kJ8QqJZQ"; // Syrex-style nightcore playlist
@@ -185,6 +185,15 @@ function renderRadar(note) {
   const cx = 150;
   const cy = 150;
   const neighbors = note.neighbors.slice(0, 4);
+  const overflow = note.neighbors.length - neighbors.length;
+  const overflowEl = $("#radar-overflow");
+  if (overflow > 0) {
+    overflowEl.textContent = `+${overflow} CTRL+P`;
+    overflowEl.classList.remove("hidden");
+  } else {
+    overflowEl.classList.add("hidden");
+  }
+
   const positions = neighbors.map((_, i) => {
     const angle = (i / neighbors.length) * Math.PI * 2 - Math.PI / 2;
     return {
@@ -267,6 +276,12 @@ function setupDebugVu() {
     }
   });
   $("#reactivity-indicator").addEventListener("click", toggle);
+
+  const intensityInput = $("#debug-intensity");
+  intensityInput.value = String(Math.round(getIntensity() * 100));
+  intensityInput.addEventListener("input", (e) => {
+    setIntensity(parseInt(e.target.value, 10) / 100);
+  });
 
   onBands((bandValues) => {
     if (panel.classList.contains("hidden")) return;

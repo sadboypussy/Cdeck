@@ -88,6 +88,7 @@
             <g id="radar-nodes"></g>
           </svg>
           <div class="radar-tooltip" id="radar-tooltip"></div>
+          <div class="radar-overflow hidden" id="radar-overflow"></div>
         </div>
       </main>
 
@@ -114,6 +115,10 @@
 
     <div class="debug-vu hidden" id="debug-vu" aria-hidden="true">
       <div class="debug-vu-label">DEBUG VU — Ctrl+Shift+D</div>
+      <label class="debug-intensity">
+        INT
+        <input type="range" id="debug-intensity" min="25" max="200" value="100" />
+      </label>
       <div class="debug-vu-bars" id="debug-vu-bars"></div>
     </div>
 

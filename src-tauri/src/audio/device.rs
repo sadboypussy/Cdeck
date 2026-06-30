@@ -18,7 +18,7 @@ pub fn watch_default_device(stop: &AtomicBool, notify: mpsc::Sender<()>) {
     let Ok(initial) = default_render_device_id() else {
         return;
     };
-    let mut last_id = initial;
+    let last_id = initial;
 
     while !stop.load(Ordering::Relaxed) {
         thread::sleep(Duration::from_millis(POLL_INTERVAL_MS));

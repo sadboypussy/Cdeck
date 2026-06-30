@@ -386,7 +386,7 @@ body {
 
 .radar-node-neighbor.peak circle {
   stroke: var(--pink);
-  stroke-width: calc(1.5 + var(--peak, 0) * 1.5);
+  stroke-width: calc(1.5 + var(--peak, 0) * var(--intensity, 1) * 1.5);
 }
 
 .radar-link {
@@ -545,6 +545,35 @@ body.audio-active .radar-ring {
   margin-bottom: 4px;
   color: var(--cyan);
   opacity: 0.6;
+}
+
+.debug-intensity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 7px;
+  letter-spacing: 0.06em;
+}
+
+.debug-intensity input {
+  flex: 1;
+  accent-color: var(--cyan);
+  height: 3px;
+}
+
+.radar-overflow {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-family: var(--term);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.radar-overflow.hidden {
+  display: none;
 }
 
 .debug-vu-bar {

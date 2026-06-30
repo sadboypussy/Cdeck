@@ -50,6 +50,17 @@ pub fn aggregate_bands(magnitudes: &[f32], sample_rate: u32) -> [f32; NUM_BANDS]
     bands.map(|b| b.clamp(0.0, 1.0))
 }
 
+pub fn filter_pollution(bands: &mut [f32; NUM_BANDS]) {
+    let bass = (bands[0] + bands[1]) * 0.5;
+    let highs = bands[4];
+    let peak = bands[5];
+    // PDD §3.2 — sons aigus courts sans fond basse (notifications, etc.)
+    if (highs > 0.3 || peak > 0.35) && bass < 0.1 {
+        bands[4] *= 0.4;
+        bands[5] *= 0.2;
+    }
+}
+
 pub fn apply_transient(prev_bass: f32, bands: &mut [f32; NUM_BANDS], threshold: f32) {
     let delta = bands[1] - prev_bass;
     if delta > threshold {

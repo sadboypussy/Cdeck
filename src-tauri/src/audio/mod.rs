@@ -4,13 +4,13 @@ mod loopback;
 
 use device::watch_default_device;
 use fft::{
-    aggregate_bands, apply_transient, is_silent, magnitudes_from_fft, smooth_bands, AudioBandsPayload,
-    FFT_SIZE, NUM_BANDS, SILENCE_MS, TRANSIENT_THRESHOLD,
+    aggregate_bands, apply_transient, filter_pollution, is_silent, magnitudes_from_fft,
+    smooth_bands, AudioBandsPayload, FFT_SIZE, NUM_BANDS, SILENCE_MS, TRANSIENT_THRESHOLD,
 };
 use loopback::capture_loop;
 use realfft::RealFftPlanner;
 use rustfft::num_complex::Complex;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
@@ -40,6 +40,7 @@ fn audio_engine(app: AppHandle) {
 
 fn run_session(app: &AppHandle) -> Result<(), String> {
     let stop = Arc::new(AtomicBool::new(false));
+    let sample_rate = Arc::new(AtomicU32::new(48000));
     let (device_tx, device_rx) = mpsc::channel();
 
     let stop_watch = stop.clone();
@@ -50,12 +51,13 @@ fn run_session(app: &AppHandle) -> Result<(), String> {
 
     let (sample_tx, sample_rx) = mpsc::sync_channel::<Vec<f32>>(8);
     let stop_capture = stop.clone();
+    let rate_capture = sample_rate.clone();
     let capture = thread::Builder::new()
         .name("wasapi-loopback".into())
-        .spawn(move || capture_loop(sample_tx, 1024, stop_capture))
+        .spawn(move || capture_loop(sample_tx, 1024, stop_capture, rate_capture))
         .map_err(|e| e.to_string())?;
 
-    run_analysis_loop(app, sample_rx, device_rx, &capture, stop.clone())?;
+    run_analysis_loop(app, sample_rx, device_rx, &capture, stop.clone(), sample_rate)?;
 
     stop.store(true, Ordering::Relaxed);
     match capture.join() {
@@ -73,6 +75,7 @@ fn run_analysis_loop(
     device_rx: mpsc::Receiver<()>,
     capture_handle: &JoinHandle<Result<(), String>>,
     stop: Arc<AtomicBool>,
+    sample_rate: Arc<AtomicU32>,
 ) -> Result<(), String> {
     let mut planner = RealFftPlanner::<f32>::new();
     let r2c = planner.plan_fft_forward(FFT_SIZE);
@@ -83,7 +86,6 @@ fn run_analysis_loop(
     let mut smoothed = [0.0f32; NUM_BANDS];
     let mut last_emit = Instant::now();
     let mut silent_since: Option<Instant> = None;
-    let sample_rate = 48000u32;
 
     while !capture_handle.is_finished() {
         if device_rx.try_recv().is_ok() {
@@ -104,8 +106,10 @@ fn run_analysis_loop(
         {
             indata.copy_from_slice(&sample_buf[sample_buf.len() - FFT_SIZE..]);
             if r2c.process(&mut indata, &mut outdata).is_ok() {
+                let rate = sample_rate.load(Ordering::Relaxed).max(8000);
                 let magnitudes = magnitudes_from_fft(&outdata);
-                let mut bands = aggregate_bands(&magnitudes, sample_rate);
+                let mut bands = aggregate_bands(&magnitudes, rate);
+                filter_pollution(&mut bands);
                 apply_transient(prev_bands[1], &mut bands, TRANSIENT_THRESHOLD);
                 prev_bands = bands;
 

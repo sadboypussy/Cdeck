@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
 use wasapi::*;
@@ -19,11 +19,17 @@ pub fn capture_loop(
     tx: mpsc::SyncSender<Vec<f32>>,
     chunksize: usize,
     stop: Arc<AtomicBool>,
+    sample_rate: Arc<AtomicU32>,
 ) -> Result<(), String> {
     let device = get_default_device(&Direction::Render).map_err(|e| e.to_string())?;
     let mut audio_client = device.get_iaudioclient().map_err(|e| e.to_string())?;
 
-    let desired_format = WaveFormat::new(32, 32, &SampleType::Float, 48000, 2, None);
+    let mix_format = audio_client.get_mixformat().map_err(|e| e.to_string())?;
+    let native_rate = mix_format.get_samplespersec();
+    sample_rate.store(native_rate, Ordering::Relaxed);
+
+    let desired_format =
+        WaveFormat::new(32, 32, &SampleType::Float, native_rate as usize, 2, None);
     let blockalign = desired_format.get_blockalign();
     let (_, min_time) = audio_client.get_device_period().map_err(|e| e.to_string())?;
 
