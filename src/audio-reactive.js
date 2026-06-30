@@ -1,11 +1,13 @@
 /** Consommation bandes audio — Rust emit ou fallback simulation. */
 
+import { listen } from "./tauri-shim.js";
+
 const BAND_COUNT = 6;
 const SILENCE_THRESHOLD_MS = 2000;
-/** PDD §3.1 — amplitude max ~3 % sur texte */
 const MAX_VISUAL_AMPLITUDE = 0.03;
 const PEAK_LINK_THRESHOLD = 0.25;
 const INTENSITY_KEY = "cyber-deck-intensity";
+const RUST_MIN_ENERGY = 0.025;
 
 let intensity = loadIntensity();
 
@@ -15,18 +17,26 @@ let recentEnergy = 0;
 let lastActive = Date.now();
 let tick = 0;
 let intervalId = null;
-let usingRust = false;
+let rustPayload = null;
 
 const listeners = new Set();
 
 function loadIntensity() {
-  const v = parseInt(localStorage.getItem(INTENSITY_KEY) ?? "100", 10);
-  return Number.isFinite(v) ? v / 100 : 1;
+  try {
+    const v = parseInt(localStorage.getItem(INTENSITY_KEY) ?? "100", 10);
+    return Number.isFinite(v) ? v / 100 : 1;
+  } catch {
+    return 1;
+  }
 }
 
 export function setIntensity(factor) {
   intensity = Math.max(0.25, Math.min(2, factor));
-  localStorage.setItem(INTENSITY_KEY, String(Math.round(intensity * 100)));
+  try {
+    localStorage.setItem(INTENSITY_KEY, String(Math.round(intensity * 100)));
+  } catch {
+    /* Tracking Prevention / private mode */
+  }
   document.documentElement.style.setProperty("--intensity", intensity.toFixed(2));
 }
 
@@ -53,9 +63,7 @@ export function onBands(fn) {
   return () => listeners.delete(fn);
 }
 
-function notifyListeners(silentOverride) {
-  const silent =
-    silentOverride !== undefined ? silentOverride : isSilent();
+function notifyListeners(silent) {
   for (const fn of listeners) fn(bands, silent);
 }
 
@@ -75,14 +83,8 @@ function applyVisuals(bass, energy, peak, silent) {
 
   recentEnergy = smoothedVisual.energy;
 
-  document.documentElement.style.setProperty(
-    "--energy",
-    smoothedVisual.energy.toFixed(3)
-  );
-  document.documentElement.style.setProperty(
-    "--peak",
-    smoothedVisual.peak.toFixed(3)
-  );
+  document.documentElement.style.setProperty("--energy", smoothedVisual.energy.toFixed(3));
+  document.documentElement.style.setProperty("--peak", smoothedVisual.peak.toFixed(3));
   document.documentElement.style.setProperty(
     "--bass-delta",
     `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 0.08).toFixed(4)}em`
@@ -92,8 +94,8 @@ function applyVisuals(bass, energy, peak, silent) {
     `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 200).toFixed(1)}px`
   );
 
-  document.body.classList.toggle("audio-active", !silent);
-  document.body.classList.toggle("audio-silent", silent);
+  document.body.classList.toggle("audio-active", !silent && smoothedVisual.energy > 0.02);
+  document.body.classList.toggle("audio-silent", silent || smoothedVisual.energy <= 0.02);
 }
 
 function applyBands(newBands, silent, energyFromRust) {
@@ -103,16 +105,21 @@ function applyBands(newBands, silent, energyFromRust) {
   const bass = bands[0] ?? 0;
   const mid = ((bands[2] ?? 0) + (bands[3] ?? 0)) / 2;
   const peak = bands[5] ?? 0;
-  const energy =
-    energyFromRust ?? (bass + mid + (bands[4] ?? 0)) / 3;
+  const energy = energyFromRust ?? (bass + mid + (bands[4] ?? 0)) / 3;
 
-  if (!silent) lastActive = Date.now();
+  if (!silent && energy > 0.02) lastActive = Date.now();
   applyVisuals(bass, energy, peak, silent);
   notifyListeners(silent);
 }
 
 function simulate() {
-  if (usingRust) return;
+  if (rustPayload) {
+    const e = rustPayload.energy ?? 0;
+    if (e > RUST_MIN_ENERGY && !rustPayload.silent) {
+      applyBands(rustPayload.bands, rustPayload.silent, rustPayload.energy);
+      return;
+    }
+  }
 
   tick += 0.05;
   const beat = Math.sin(tick * 2.1);
@@ -126,7 +133,7 @@ function simulate() {
 }
 
 export function startSimulation() {
-  if (intervalId || usingRust) return;
+  if (intervalId) return;
   intervalId = setInterval(simulate, 33);
 }
 
@@ -139,11 +146,8 @@ export function stopSimulation() {
 
 export async function connectTauriAudio() {
   try {
-    const { listen } = await import("@tauri-apps/api/event");
     await listen("audio-bands", ({ payload }) => {
-      usingRust = true;
-      stopSimulation();
-      applyBands(payload.bands, payload.silent, payload.energy);
+      rustPayload = payload;
     });
     return true;
   } catch {
@@ -152,8 +156,10 @@ export async function connectTauriAudio() {
 }
 
 export async function initAudioReactive() {
-  const connected = await connectTauriAudio();
-  if (!connected) startSimulation();
+  startSimulation();
+  await connectTauriAudio();
 }
+
+startSimulation();
 
 export { PEAK_LINK_THRESHOLD };

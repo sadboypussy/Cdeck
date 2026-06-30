@@ -2,109 +2,132 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=405, height=720, initial-scale=1.0, user-scalable=no" />
     <title>VISUAL-CORE-77</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Share+Tech+Mono&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles/main.css" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-        }
-      }
-    </script>
   </head>
   <body>
     <div class="ambient-bg"></div>
 
     <div class="device" id="device">
       <div class="device-noise" aria-hidden="true"></div>
-      <span class="bracket bracket-tl"></span>
-      <span class="bracket bracket-tr"></span>
-      <span class="bracket bracket-bl"></span>
-      <span class="bracket bracket-br"></span>
 
-      <header class="topbar glass-bar">
-        <span class="topbar-label">VISUAL-CORE-77</span>
-        <span class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D debug audio">
-          <span class="pulse-dot"></span> REACT
-        </span>
-        <span class="topbar-clock" id="clock">--:--</span>
+      <header class="topbar">
+        <div class="topbar-id">VISUAL-CORE <span>/ 77</span></div>
+        <div class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D debug audio">
+          <span class="pulse-dot"></span> LIVE
+        </div>
+        <div class="topbar-clock" id="clock">--:--</div>
       </header>
 
-      <section class="audio-tier glass-panel" id="audio-tier">
+      <section class="audio-tier" id="audio-tier">
         <canvas class="ambient-canvas" id="ambient-canvas" aria-hidden="true"></canvas>
-        <div class="scanner-frame glass-inset crt-active">
-          <div id="yt-player" class="yt-player"></div>
-          <div class="scanner-overlay"></div>
-          <canvas class="crt-canvas" id="crt-canvas" aria-hidden="true"></canvas>
-          <div class="scanner-corners"></div>
+        <div class="video-shell">
+          <div class="scanner-frame crt-active">
+            <div id="yt-player" class="yt-player"></div>
+            <div class="video-fallback" id="video-fallback">
+              <div class="video-fallback-pulse" aria-hidden="true"></div>
+              <p class="video-fallback-title">Ambiance audio</p>
+              <p class="video-fallback-sub">Lance ta musique ailleurs (Spotify, navigateur…) — l'interface capte le <strong>son système</strong> via WASAPI.</p>
+            </div>
+            <div class="scanner-overlay"></div>
+            <div class="frame-sheen" aria-hidden="true"></div>
+            <canvas class="crt-canvas" id="crt-canvas" aria-hidden="true"></canvas>
+            <div class="now-tag">NOW PLAYING</div>
+          </div>
         </div>
-        <div class="track-info">
-          <div class="data-stream" id="track-title">DATA_STREAM // SYREX NIGHTCORE</div>
+
+        <div class="track-row">
+          <div class="track-title" id="track-title">En attente</div>
+          <div class="track-sub" id="track-sub">▶ pour lancer · ou musique système</div>
         </div>
-        <div class="terminal-controls">
-          <button class="term-btn glass-btn" id="btn-prev" title="Précédent">◀◀</button>
-          <button class="term-btn glass-btn term-btn-primary" id="btn-play" title="Play/Pause">▶</button>
-          <button class="term-btn glass-btn" id="btn-next" title="Suivant">▶▶</button>
-          <input type="range" class="volume-slider" id="volume" min="0" max="100" value="60" />
+
+        <div class="audio-wave" id="audio-wave" aria-hidden="true"></div>
+
+        <div class="controls-row">
+          <button class="icon-btn" id="btn-prev" title="Précédent" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 5v14M18 5L8 12l10 7V5z" fill="currentColor" />
+            </svg>
+          </button>
+          <button class="icon-btn icon-btn-primary" id="btn-play" title="Play/Pause" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 4l13 8-13 8V4z" fill="currentColor" />
+            </svg>
+          </button>
+          <button class="icon-btn" id="btn-next" title="Suivant" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 5v14M6 5l10 7L6 19V5z" fill="currentColor" />
+            </svg>
+          </button>
+          <label class="volume">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M4 9v6h4l5 4V5L8 9H4z" />
+              <path d="M16 9a4 4 0 0 1 0 6" stroke-linecap="round" />
+            </svg>
+            <input type="range" id="volume" min="0" max="100" value="60" />
+          </label>
         </div>
       </section>
 
-      <nav class="tabswitch glass-bar">
-        <button class="tab active" data-tab="notes" id="tab-notes">
-          <span class="tab-glow"></span> NOTES
-        </button>
-        <button class="tab" data-tab="radar" id="tab-radar">
-          <span class="tab-glow"></span> RADAR
-        </button>
-      </nav>
+      <div class="tabs">
+        <div class="tabs-track" id="tabs-track">
+          <div class="tab-indicator" aria-hidden="true"></div>
+          <button class="tab active" data-tab="notes" id="tab-notes" type="button">Notes</button>
+          <button class="tab" data-tab="links" id="tab-links" type="button">Liens</button>
+        </div>
+      </div>
 
       <main class="workzone">
         <div class="workzone-glitch" id="workzone-glitch" aria-hidden="true"></div>
         <div class="panel panel-notes active" id="panel-notes">
-          <div class="editor-wrap glass-inset">
+          <div class="editor-wrap">
             <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
             <textarea class="editor" id="editor" spellcheck="false" placeholder="# Nouvelle note…"></textarea>
           </div>
-          <div class="tags-bar glass-bar" id="tags-bar"></div>
+          <div class="tags-bar" id="tags-bar"></div>
         </div>
 
-        <div class="panel panel-radar" id="panel-radar">
-          <canvas id="radar-canvas" class="radar-canvas"></canvas>
-          <div class="radar-hud">
-            <div class="radar-hud-title">PROXIMITY SCAN</div>
-            <div class="radar-hud-node" id="radar-active-label">—</div>
+        <div class="panel panel-links" id="panel-links">
+          <p class="links-hint">Notes connectées à celle que tu édites — via <code>[[NomNote]]</code> dans le texte.</p>
+
+          <div class="links-active">
+            <span class="links-active-label">Note ouverte</span>
+            <span class="links-active-title" id="links-active-title">—</span>
+            <span class="links-active-id" id="links-active-id">—</span>
           </div>
-          <div class="radar-empty hidden" id="radar-empty">
-            Aucun voisin — ajoute des liens <code>[[Note]]</code>
+
+          <div class="links-empty hidden" id="links-empty">
+            <p>Aucun lien pour l'instant.</p>
+            <p class="links-empty-example">Exemple : <code>[[WASAPI]]</code> ou <code>[[Tauri_Shell]]</code></p>
           </div>
-          <div class="radar-overflow hidden" id="radar-overflow"></div>
+
+          <div class="links-list" id="links-list"></div>
+          <p class="links-overflow hidden" id="links-overflow"></p>
         </div>
       </main>
 
-      <footer class="statusbar glass-bar">
-        <span id="cursor-pos">LN 1 · COL 1</span>
-        <span id="sync-status">SYNC OK</span>
-        <span>v0.2</span>
+      <footer class="statusbar">
+        <span id="cursor-pos">Ln 1, Col 1</span>
+        <span id="sync-status" class="status-ok">Synced · v0.2</span>
       </footer>
     </div>
 
     <div class="hud-overlay hidden" id="hud">
-      <div class="hud-panel glass-panel">
-        <div class="hud-header">⌘ PALETTE — Ctrl+P · créer une note</div>
+      <div class="hud-panel">
+        <div class="hud-header">Palette · Ctrl+P</div>
         <input type="text" class="hud-input" id="hud-input" placeholder="Rechercher ou nommer une note…" autocomplete="off" />
         <ul class="hud-results" id="hud-results"></ul>
       </div>
     </div>
 
-    <div class="debug-vu hidden glass-panel" id="debug-vu" aria-hidden="true">
+    <div class="debug-vu hidden" id="debug-vu" aria-hidden="true">
       <div class="debug-vu-label">DEBUG VU — Ctrl+Shift+D</div>
       <label class="debug-intensity">
         INT
@@ -113,7 +136,6 @@
       <div class="debug-vu-bars" id="debug-vu-bars"></div>
     </div>
 
-    <script src="https://www.youtube.com/iframe_api"></script>
     <script type="module" src="main.js"></script>
   </body>
 </html>

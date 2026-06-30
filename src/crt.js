@@ -26,18 +26,18 @@ export function startCrt(canvas, hostEl) {
     ctx.clearRect(0, 0, w, h);
     t += 0.016;
 
-    // Scanlines
-    ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
-    for (let y = 0; y < h; y += 3) {
+    // Scanlines — subtle (felt, not seen)
+    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+    for (let y = 0; y < h; y += 4) {
       ctx.fillRect(0, y, w, 1);
     }
 
     // Moving bright scan beam
-    const beamY = ((t * 42 + Math.sin(t * 0.7) * 18) % (h + 60)) - 30;
-    const grad = ctx.createLinearGradient(0, beamY - 20, 0, beamY + 20);
+    const beamY = ((t * 36 + Math.sin(t * 0.7) * 14) % (h + 60)) - 30;
+    const grad = ctx.createLinearGradient(0, beamY - 16, 0, beamY + 16);
     grad.addColorStop(0, "rgba(121, 255, 225, 0)");
-    grad.addColorStop(0.45, `rgba(121, 255, 225, ${0.06 + energy * 0.12})`);
-    grad.addColorStop(0.55, `rgba(121, 255, 225, ${0.1 + energy * 0.18})`);
+    grad.addColorStop(0.45, `rgba(121, 255, 225, ${0.02 + energy * 0.05})`);
+    grad.addColorStop(0.55, `rgba(121, 255, 225, ${0.04 + energy * 0.08})`);
     grad.addColorStop(1, "rgba(121, 255, 225, 0)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, beamY - 20, w, 40);
@@ -45,7 +45,7 @@ export function startCrt(canvas, hostEl) {
     // Vignette
     const vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, h * 0.85);
     vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, "rgba(0,0,0,0.55)");
+    vig.addColorStop(1, "rgba(0,0,0,0.35)");
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, w, h);
 
@@ -59,11 +59,11 @@ export function startCrt(canvas, hostEl) {
     ctx.globalCompositeOperation = "source-over";
 
     // Film noise
-    const noiseCount = Math.floor(12 + energy * 28);
+    const noiseCount = Math.floor(4 + energy * 10);
     for (let i = 0; i < noiseCount; i++) {
       const nx = Math.random() * w;
       const ny = Math.random() * h;
-      ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.06})`;
+      ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.03})`;
       ctx.fillRect(nx, ny, 1, 1);
     }
 

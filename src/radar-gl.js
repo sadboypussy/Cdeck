@@ -1,7 +1,4 @@
-import * as THREE from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import * as THREE from "./vendor/three.module.js";
 
 const NEIGHBOR_RADIUS = 1.35;
 const MAX_NEIGHBORS = 4;
@@ -25,9 +22,6 @@ export function createRadar(canvas) {
   const keyLight = new THREE.PointLight(0x79ffe1, 1.2, 12);
   keyLight.position.set(2, 2, 3);
   scene.add(keyLight);
-  const rimLight = new THREE.PointLight(0xff0055, 0.5, 10);
-  rimLight.position.set(-2, -1, 2);
-  scene.add(rimLight);
 
   const ringGroup = new THREE.Group();
   [1.9, 1.35, 0.75].forEach((r, i) => {
@@ -54,17 +48,7 @@ export function createRadar(canvas) {
       blending: THREE.AdditiveBlending,
     })
   );
-  const sweepGlow = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.8, 0.14),
-    new THREE.MeshBasicMaterial({
-      color: 0x79ffe1,
-      transparent: true,
-      opacity: 0.2,
-      blending: THREE.AdditiveBlending,
-    })
-  );
-  sweepGlow.position.z = -0.002;
-  sweepGroup.add(sweepGlow, sweep);
+  sweepGroup.add(sweep);
   sweepGroup.position.z = 0.01;
   scene.add(sweepGroup);
 
@@ -91,7 +75,7 @@ export function createRadar(canvas) {
   nodeGroup.add(centerMesh);
 
   let state = { id: "", neighbors: [] };
-  let neighborMeshes = [];
+  let neighborNodes = [];
   let linkLines = null;
   let energy = 0;
   let peak = 0;
@@ -100,45 +84,32 @@ export function createRadar(canvas) {
   const pointer = new THREE.Vector2();
   let onSelect = () => {};
 
-  let composer = null;
-  let bloomPass = null;
-
-  function setupComposer(w, h) {
-    composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.75, 0.4, 0.12);
-    composer.addPass(bloomPass);
-  }
-
   function resize() {
     const parent = canvas.parentElement;
-    if (!parent) return;
+    if (!parent || parent.clientWidth < 1 || parent.clientHeight < 1) return;
     const w = parent.clientWidth;
     const h = parent.clientHeight;
-    if (w < 1 || h < 1) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    if (!composer) setupComposer(w, h);
-    composer.setSize(w, h);
-    bloomPass?.setSize(w, h);
   }
 
   function clearLinks() {
-    if (linkLines) {
-      linkGroup.remove(linkLines);
-      linkLines.geometry.dispose();
-      linkLines.material.dispose();
-      linkLines = null;
-    }
+    if (!linkLines) return;
+    linkGroup.remove(linkLines);
+    linkLines.geometry.dispose();
+    linkLines.material.dispose();
+    linkLines = null;
   }
 
   function clearNeighbors() {
-    neighborMeshes.forEach((m) => {
-      nodeGroup.remove(m);
-      m.geometry.dispose();
+    neighborNodes.forEach((g) => {
+      nodeGroup.remove(g);
+      g.traverse((obj) => {
+        if (obj.geometry) obj.geometry.dispose();
+      });
     });
-    neighborMeshes = [];
+    neighborNodes = [];
     clearLinks();
   }
 
@@ -148,17 +119,25 @@ export function createRadar(canvas) {
     if (count === 0) return;
 
     const positions = [];
-    neighborMeshes = ids.slice(0, MAX_NEIGHBORS).map((id, i) => {
+    ids.slice(0, MAX_NEIGHBORS).forEach((id, i) => {
       const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
       const x = Math.cos(angle) * NEIGHBOR_RADIUS;
       const y = Math.sin(angle) * NEIGHBOR_RADIUS;
       positions.push(x, y, 0);
 
+      const group = new THREE.Group();
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.11, 24, 24), neighborMat.clone());
       mesh.position.set(x, y, 0);
-      mesh.userData = { id };
-      nodeGroup.add(mesh);
-      return mesh;
+      const hit = new THREE.Mesh(
+        new THREE.SphereGeometry(0.28, 12, 12),
+        new THREE.MeshBasicMaterial({ visible: false })
+      );
+      hit.position.set(x, y, 0);
+      hit.userData = { id };
+      group.userData = { id, visual: mesh };
+      group.add(mesh, hit);
+      nodeGroup.add(group);
+      neighborNodes.push(group);
     });
 
     const lineGeo = new THREE.BufferGeometry();
@@ -188,19 +167,24 @@ export function createRadar(canvas) {
   function setEnergy(e, p) {
     energy = e;
     peak = p;
-    if (bloomPass) {
-      bloomPass.strength = 0.5 + e * 0.7 + p * 0.45;
-    }
   }
 
   function pick(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
     pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(neighborMeshes, false);
-    if (hits.length > 0 && hits[0].object.userData.id) {
-      onSelect(hits[0].object.userData.id);
+    const hits = raycaster.intersectObjects(neighborNodes, true);
+    for (const hit of hits) {
+      let obj = hit.object;
+      while (obj) {
+        if (obj.userData?.id) {
+          onSelect(obj.userData.id);
+          return;
+        }
+        obj = obj.parent;
+      }
     }
   }
 
@@ -209,30 +193,30 @@ export function createRadar(canvas) {
     sweepGroup.rotation.z = sweepAngle;
     ringGroup.rotation.z = sweepAngle * 0.15;
 
-    const breathe = 1 + energy * 0.08;
-    centerMesh.scale.setScalar(breathe);
+    centerMesh.scale.setScalar(1 + energy * 0.08);
     centerMat.emissiveIntensity = 0.55 + energy * 0.75 + peak * 0.35;
     sweep.material.opacity = 0.4 + energy * 0.25 + peak * 0.2;
-    sweepGlow.material.opacity = 0.12 + energy * 0.2 + peak * 0.15;
 
-    neighborMeshes.forEach((m, i) => {
-      const pulse = peak > 0.25 && i % 2 === 0 ? 1 + peak * 0.25 : 1;
-      m.scale.setScalar(pulse);
-      m.material.emissiveIntensity = 0.2 + energy * 0.4;
+    neighborNodes.forEach((g, i) => {
+      const mesh = g.userData.visual;
+      if (!mesh) return;
+      mesh.scale.setScalar(peak > 0.25 && i % 2 === 0 ? 1 + peak * 0.25 : 1);
+      if (mesh.material?.emissiveIntensity !== undefined) {
+        mesh.material.emissiveIntensity = 0.2 + energy * 0.4;
+      }
     });
 
     if (linkLines) {
       linkLines.material.opacity = 0.2 + energy * 0.25;
     }
 
-    if (composer) {
-      composer.render();
-    } else {
-      renderer.render(scene, camera);
-    }
+    renderer.render(scene, camera);
   }
 
   canvas.addEventListener("click", (e) => pick(e.clientX, e.clientY));
+
+  const ro = new ResizeObserver(() => resize());
+  if (canvas.parentElement) ro.observe(canvas.parentElement);
 
   return {
     resize,
@@ -243,5 +227,6 @@ export function createRadar(canvas) {
       onSelect = fn;
     },
     getState: () => state,
+    destroy: () => ro.disconnect(),
   };
 }

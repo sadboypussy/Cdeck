@@ -1,54 +1,100 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./tauri-shim.js";
 import { initAudioReactive, onBands, getRecentEnergy, PEAK_LINK_THRESHOLD, setIntensity, getIntensity } from "./audio-reactive.js";
-import { createRadar } from "./radar-gl.js";
 import { startAmbient, setAmbientEnergy } from "./ambient.js";
 import { startCrt } from "./crt.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
-const YT_PLAYLIST = "PLrAXtmRdnEQy6nuLMH8k8C_4kJ8QqJZQ";
+const YT_VIDEO_IDS = ["ScMzIvxBSi4", "M7lc1UVf-VE"];
+let ytVideoIndex = 0;
 
 let player = null;
+let playerReady = false;
+let ytMounting = false;
 let currentNoteId = null;
 let saveTimer = null;
 let allNotes = [];
 let hudSelected = 0;
 let hudCreateId = null;
-let radarGl = null;
 let crtFx = null;
 let currentNote = null;
 
 const $ = (sel) => document.querySelector(sel);
+
+const ICON_PLAY = '<path d="M7 4l13 8-13 8V4z" fill="currentColor" />';
+const ICON_PAUSE = '<path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" fill="currentColor" />';
+
+function setPlayIcon(playing) {
+  $("#btn-play").innerHTML = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${playing ? ICON_PAUSE : ICON_PLAY}</svg>`;
+}
+
+function ytReady() {
+  return playerReady && player && typeof player.getPlayerState === "function";
+}
+
+function setPlayerVolume(value) {
+  if (ytReady() && typeof player.setVolume === "function") {
+    player.setVolume(value);
+  }
+}
+
+function showVideoFallback() {
+  $("#video-fallback")?.classList.remove("hidden");
+  $("#yt-player")?.classList.add("hidden");
+}
+
+function loadYouTubeApi() {
+  return new Promise((resolve) => {
+    if (window.YT?.Player) {
+      resolve();
+      return;
+    }
+    if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      const wait = setInterval(() => {
+        if (window.YT?.Player) {
+          clearInterval(wait);
+          resolve();
+        }
+      }, 50);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+    window.onYouTubeIframeAPIReady = () => resolve();
+  });
+}
 
 async function init() {
   setupClock();
   setupTabs();
   setupEditor();
   setupHud();
+  setupWave();
   setupDebugVu();
-  setupRadar();
-  startAmbient($("#ambient-canvas"));
-  const scannerFrame = $(".scanner-frame");
-  scannerFrame.classList.add("crt-active");
-  crtFx = startCrt($("#crt-canvas"), scannerFrame);
   setupPlayer();
+
+  try {
+    startAmbient($("#ambient-canvas"));
+  } catch (e) {
+    console.warn("[ambient]", e);
+  }
+
+  try {
+    crtFx = startCrt($("#crt-canvas"), $(".scanner-frame"));
+  } catch (e) {
+    console.warn("[crt]", e);
+  }
+
   await initAudioReactive();
   applyAudioReactive();
 
-  allNotes = await invoke("list_notes");
-  await loadNote(DEFAULT_NOTE);
-}
-
-function setupRadar() {
-  const canvas = $("#radar-canvas");
-  radarGl = createRadar(canvas);
-  radarGl.onSelect((id) => loadNote(id));
-
-  const loop = () => {
-    radarGl?.tick();
-    requestAnimationFrame(loop);
-  };
-  loop();
-  requestAnimationFrame(() => radarGl?.resize());
+  try {
+    allNotes = await invoke("list_notes");
+    await loadNote(DEFAULT_NOTE);
+  } catch (e) {
+    console.warn("[notes]", e);
+    $("#sync-status").textContent = "Vault offline";
+  }
 }
 
 function setupClock() {
@@ -71,49 +117,28 @@ function sanitizeNoteId(raw) {
     .replace(/[^\w\-]/g, "");
 }
 
-function switchTab(tabName) {
-  const current = document.querySelector(".tab.active");
-  if (current?.dataset.tab === tabName) return;
-
-  const workzone = $(".workzone");
-  const glitch = $("#workzone-glitch");
-  const nextTab = $(`.tab[data-tab="${tabName}"]`);
-  const currentPanel = document.querySelector(".panel.active");
-  const nextPanel = $(`#panel-${tabName}`);
-
-  document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active", "tab-switching"));
-  nextTab.classList.add("active", "tab-switching");
-
-  if (currentPanel) {
-    currentPanel.classList.add("panel-fade-out");
+function setupWave() {
+  const wave = $("#audio-wave");
+  for (let i = 0; i < 14; i++) {
+    const bar = document.createElement("i");
+    bar.style.height = "18%";
+    wave.appendChild(bar);
   }
-
-  glitch.classList.remove("active");
-  void glitch.offsetWidth;
-  glitch.classList.add("active");
-
-  setTimeout(() => {
-    if (currentPanel) {
-      currentPanel.classList.remove("panel-fade-out", "active");
-    }
-    nextPanel.classList.add("active", "panel-fade-in");
-    setTimeout(() => nextPanel.classList.remove("panel-fade-in"), 260);
-
-    if (tabName === "radar") {
-      requestAnimationFrame(() => {
-        radarGl?.resize();
-        if (currentNote) renderRadar(currentNote);
-      });
-    }
-  }, 140);
-
-  setTimeout(() => glitch.classList.remove("active"), 400);
 }
 
 function setupTabs() {
-  document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => switchTab(tab.dataset.tab));
-  });
+  $("#tab-notes").addEventListener("click", () => switchTab("notes"));
+  $("#tab-links").addEventListener("click", () => switchTab("links"));
+}
+
+function switchTab(tabName) {
+  const isLinks = tabName === "links";
+
+  $("#tab-notes").classList.toggle("active", !isLinks);
+  $("#tab-links").classList.toggle("active", isLinks);
+  $("#tabs-track").classList.toggle("links-on", isLinks);
+  $("#panel-notes").classList.toggle("active", !isLinks);
+  $("#panel-links").classList.toggle("active", isLinks);
 }
 
 function setupEditor() {
@@ -169,7 +194,7 @@ function updateCursorPos() {
   const lines = text.split("\n");
   const ln = lines.length;
   const col = lines[lines.length - 1].length + 1;
-  $("#cursor-pos").textContent = `LN ${ln} · COL ${col}`;
+  $("#cursor-pos").textContent = `Ln ${ln}, Col ${col}`;
 }
 
 function scheduleSave() {
@@ -184,10 +209,12 @@ async function saveCurrentNote() {
   try {
     const note = await invoke("save_note", { id: currentNoteId, body, tags });
     currentNote = note;
-    renderRadar(note);
-    $("#sync-status").textContent = "SYNC OK";
+    renderLinks(note);
+    $("#sync-status").textContent = "Synced";
+    $("#sync-status").className = "status-ok";
   } catch {
-    $("#sync-status").textContent = "SYNC ERR";
+    $("#sync-status").textContent = "Sync err";
+    $("#sync-status").className = "";
   }
 }
 
@@ -238,36 +265,57 @@ export async function loadNote(id) {
     renderTags(note.tags);
     renderEditorBackdrop();
     updateCursorPos();
-    renderRadar(note);
-    $("#sync-status").textContent = "SYNC OK";
+    renderLinks(note);
+    $("#sync-status").textContent = "Synced";
+    $("#sync-status").className = "status-ok";
   } catch (err) {
     console.warn("Note introuvable:", id, err);
   }
 }
 
-function renderRadar(note) {
-  if (!radarGl) return;
+function renderLinks(note) {
+  const list = $("#links-list");
+  const emptyEl = $("#links-empty");
+  const overflowEl = $("#links-overflow");
+  const activeTitle = $("#links-active-title");
+  const activeId = $("#links-active-id");
 
-  radarGl.setNote(note);
-  $("#radar-active-label").textContent = note.id.replace(/_/g, " ");
+  activeTitle.textContent = note.title || note.id.replace(/_/g, " ");
+  activeId.textContent = note.id;
 
-  const emptyEl = $("#radar-empty");
-  if (!note.neighbors?.length) {
+  const neighbors = note.neighbors?.slice(0, 4) ?? [];
+  const overflow = (note.neighbors?.length ?? 0) - neighbors.length;
+
+  if (neighbors.length === 0) {
     emptyEl.classList.remove("hidden");
+    list.innerHTML = "";
   } else {
     emptyEl.classList.add("hidden");
+    list.innerHTML = neighbors
+      .map((id) => {
+        const meta = allNotes.find((n) => n.id === id);
+        const label = meta?.title ?? id.replace(/_/g, " ");
+        return `<button type="button" class="link-card" data-id="${escapeHtml(id)}">
+          <span class="link-card-title">${escapeHtml(label)}</span>
+          <span class="link-card-id">${escapeHtml(id)}</span>
+        </button>`;
+      })
+      .join("");
+
+    list.querySelectorAll(".link-card").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        loadNote(btn.dataset.id);
+        switchTab("notes");
+      });
+    });
   }
 
-  const overflow = (note.neighbors?.length ?? 0) - 4;
-  const overflowEl = $("#radar-overflow");
   if (overflow > 0) {
-    overflowEl.textContent = `+${overflow} · CTRL+P`;
+    overflowEl.textContent = `+${overflow} autre${overflow > 1 ? "s" : ""} · Ctrl+P pour tout voir`;
     overflowEl.classList.remove("hidden");
   } else {
     overflowEl.classList.add("hidden");
   }
-
-  requestAnimationFrame(() => radarGl.resize());
 }
 
 async function refreshNoteList() {
@@ -282,10 +330,12 @@ async function createNoteFromHud(id) {
     await refreshNoteList();
     await loadNote(cleanId);
     toggleHud(false);
-    $("#sync-status").textContent = "CREATED";
+    $("#sync-status").textContent = "Created";
+    $("#sync-status").className = "status-ok";
   } catch (err) {
     console.warn("Création note:", err);
-    $("#sync-status").textContent = "CREATE ERR";
+    $("#sync-status").textContent = "Create err";
+    $("#sync-status").className = "";
   }
 }
 
@@ -427,82 +477,125 @@ function highlightHudItem(items) {
   items[hudSelected]?.scrollIntoView({ block: "nearest" });
 }
 
+function mountPlayer() {
+  if (player || ytMounting) return;
+  ytMounting = true;
+
+  player = new YT.Player("yt-player", {
+    height: "100%",
+    width: "100%",
+    videoId: YT_VIDEO_IDS[ytVideoIndex],
+    host: "https://www.youtube-nocookie.com",
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      modestbranding: 1,
+      rel: 0,
+      playsinline: 1,
+      origin: window.location.origin,
+      enablejsapi: 1,
+    },
+    events: {
+      onReady: (event) => {
+        player = event.target;
+        playerReady = true;
+        ytMounting = false;
+        setPlayerVolume(parseInt($("#volume").value, 10));
+      },
+      onStateChange: onPlayerStateChange,
+      onError: (event) => {
+        console.warn("[yt] error", event.data);
+        if (event.data === 101 || event.data === 150 || event.data === 100) {
+          if (ytVideoIndex < YT_VIDEO_IDS.length - 1) {
+            ytVideoIndex += 1;
+            playerReady = false;
+            player.loadVideoById(YT_VIDEO_IDS[ytVideoIndex]);
+            return;
+          }
+          showVideoFallback();
+        }
+      },
+    },
+  });
+}
+
 function setupPlayer() {
-  window.onYouTubeIframeAPIReady = () => {
-    player = new YT.Player("yt-player", {
-      height: "100%",
-      width: "100%",
-      playerVars: {
-        listType: "playlist",
-        list: YT_PLAYLIST,
-        autoplay: 0,
-        controls: 0,
-        modestbranding: 1,
-        rel: 0,
-      },
-      events: {
-        onStateChange: onPlayerStateChange,
-        onReady: () => {
-          player.setVolume(parseInt($("#volume").value, 10));
-        },
-      },
-    });
-  };
-
-  if (window.YT && window.YT.Player) {
-    window.onYouTubeIframeAPIReady();
-  }
-
-  $("#btn-play").addEventListener("click", () => {
-    if (!player) return;
+  $("#btn-play").addEventListener("click", async () => {
+    if (!player && !ytMounting) {
+      try {
+        await loadYouTubeApi();
+        mountPlayer();
+        await new Promise((r) => setTimeout(r, 400));
+      } catch (e) {
+        console.warn("[yt]", e);
+        showVideoFallback();
+        return;
+      }
+    }
+    if (!ytReady()) return;
     const state = player.getPlayerState();
     if (state === YT.PlayerState.PLAYING) {
       player.pauseVideo();
-      $("#btn-play").textContent = "▶";
+      setPlayIcon(false);
     } else {
       player.playVideo();
-      $("#btn-play").textContent = "❚❚";
+      setPlayIcon(true);
     }
   });
 
-  $("#btn-next").addEventListener("click", () => player?.nextVideo());
-  $("#btn-prev").addEventListener("click", () => player?.previousVideo());
+  $("#btn-next").addEventListener("click", () => {
+    if (ytReady() && typeof player.nextVideo === "function") player.nextVideo();
+  });
+
+  $("#btn-prev").addEventListener("click", () => {
+    if (ytReady() && typeof player.previousVideo === "function") player.previousVideo();
+  });
 
   $("#volume").addEventListener("input", (e) => {
-    player?.setVolume(parseInt(e.target.value, 10));
+    setPlayerVolume(parseInt(e.target.value, 10));
   });
 }
 
 function onPlayerStateChange(event) {
+  if (!ytReady()) return;
   if (event.data === YT.PlayerState.PLAYING) {
-    $("#btn-play").textContent = "❚❚";
+    setPlayIcon(true);
+    $("#video-fallback")?.classList.add("hidden");
+    $("#yt-player")?.classList.remove("hidden");
     const data = player.getVideoData();
     if (data?.title) {
-      $("#track-title").textContent = `DATA_STREAM // ${data.title.toUpperCase()}`;
+      $("#track-title").textContent = data.title;
+      $("#track-sub").textContent = (data.author || "YOUTUBE").toUpperCase();
     }
   } else if (event.data === YT.PlayerState.PAUSED) {
-    $("#btn-play").textContent = "▶";
+    setPlayIcon(false);
   }
 }
 
 function applyAudioReactive() {
   const title = $("#track-title");
   title.classList.add("breathe");
+  const waveBars = $("#audio-wave")?.querySelectorAll("i") ?? [];
 
-  onBands((_bands, silent) => {
+  onBands((bands, silent) => {
     const indicator = $("#reactivity-indicator");
     indicator.classList.toggle("silent", silent);
 
-    const energy = parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("--energy") || "0"
-    );
+    const energy = getRecentEnergy();
     const peak = parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue("--peak") || "0"
     );
 
-    radarGl?.setEnergy(energy, peak);
     setAmbientEnergy(energy);
     crtFx?.setEnergy(energy);
+
+    waveBars.forEach((bar, i) => {
+      const bandIdx = Math.min(bands.length - 1, Math.floor((i / waveBars.length) * bands.length));
+      const v = bands[bandIdx] ?? 0;
+      const h = Math.round(10 + Math.min(1, v * 1.4) * 90);
+      bar.style.height = `${h}%`;
+      bar.classList.toggle("lo", h < 24);
+    });
 
     document.querySelectorAll(".md-wikilink").forEach((link) => {
       link.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD);
@@ -510,4 +603,7 @@ function applyAudioReactive() {
   });
 }
 
-init();
+init().catch((e) => {
+  console.error("[init]", e);
+  $("#sync-status").textContent = "Init err";
+});
