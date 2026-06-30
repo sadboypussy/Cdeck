@@ -51,13 +51,49 @@ function setupTabs() {
 
 function setupEditor() {
   const editor = $("#editor");
+  const backdrop = $("#editor-backdrop");
   editor.addEventListener("input", () => {
     updateCursorPos();
+    renderEditorBackdrop();
     scheduleSave();
   });
   editor.addEventListener("click", handleWikilinkClick);
   editor.addEventListener("keyup", updateCursorPos);
-  editor.addEventListener("scroll", syncWikilinkOverlay);
+  editor.addEventListener("scroll", () => {
+    backdrop.scrollTop = editor.scrollTop;
+    backdrop.scrollLeft = editor.scrollLeft;
+  });
+}
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function highlightLine(line) {
+  let html = escapeHtml(line);
+  html = html.replace(
+    /\[\[([^\]]+)\]\]/g,
+    '<span class="md-wikilink">[[$1]]</span>'
+  );
+  if (line.startsWith("# ")) {
+    return `<span class="md-h1">${html}</span>`;
+  }
+  if (line.startsWith("## ")) {
+    return `<span class="md-h2">${html}</span>`;
+  }
+  return html;
+}
+
+function renderEditorBackdrop() {
+  const backdrop = $("#editor-backdrop");
+  const text = $("#editor").value;
+  backdrop.innerHTML = text
+    .split("\n")
+    .map((line) => highlightLine(line))
+    .join("\n");
 }
 
 function updateCursorPos() {
@@ -117,10 +153,6 @@ function handleWikilinkClick(e) {
   }
 }
 
-function syncWikilinkOverlay() {
-  /* V1: wikilinks via click detection on textarea */
-}
-
 export async function loadNote(id) {
   try {
     const note = await invoke("get_note", { id });
@@ -130,6 +162,7 @@ export async function loadNote(id) {
     editor.classList.add("note-transition");
     setTimeout(() => editor.classList.remove("note-transition"), 350);
     renderTags(note.tags);
+    renderEditorBackdrop();
     updateCursorPos();
     renderRadar(note);
     $("#sync-status").textContent = "SYNC OK";
@@ -350,13 +383,20 @@ function applyAudioReactive() {
   const title = $("#track-title");
   title.classList.add("breathe");
 
-  onBands((bands, silent) => {
+  onBands((_bands, silent) => {
     const indicator = $("#reactivity-indicator");
     indicator.classList.toggle("silent", silent);
 
+    const peak = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--peak") || "0"
+    );
+
     document.querySelectorAll(".radar-node-neighbor").forEach((node, i) => {
-      const peak = bands[5] || 0;
       node.classList.toggle("peak", peak > 0.2 && i % 2 === 0);
+    });
+
+    document.querySelectorAll(".md-wikilink").forEach((link) => {
+      link.classList.toggle("peak", peak > 0.25);
     });
   });
 }

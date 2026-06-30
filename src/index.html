@@ -54,12 +54,15 @@
 
       <main class="workzone">
         <div class="panel panel-notes active" id="panel-notes">
-          <textarea
-            class="editor"
-            id="editor"
-            spellcheck="false"
-            placeholder="# Nouvelle note..."
-          ></textarea>
+          <div class="editor-wrap">
+            <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
+            <textarea
+              class="editor"
+              id="editor"
+              spellcheck="false"
+              placeholder="# Nouvelle note..."
+            ></textarea>
+          </div>
           <div class="tags-bar" id="tags-bar"></div>
         </div>
         <div class="panel panel-radar" id="panel-radar">
