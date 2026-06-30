@@ -34,6 +34,8 @@ notes/            Référence vault (les notes prod sont dans AppData)
 - Module `src-tauri/src/audio/` : WASAPI loopback → FFT → 6 bandes → `emit("audio-bands")`
 - Frontend écoute les bandes Rust ; fallback simulation si hors Tauri
 - Reconnexion auto si la capture loopback se termine
+- Surveillance changement périphérique sortie (A.5, poll 1.5 s)
+- Lissage silence / transitions note modulées par énergie
 
 ## Branche B (audio) — spike CLI (référence)
 
@@ -46,8 +48,8 @@ Capture loopback WASAPI → FFT → 6 bandes agrégées → vumètre terminal.
 
 ## Prochaine étape
 
-1. Calibrer seuils musicaux §3 PDD (amplitudes ~3 %, transitoires)
-2. Effets titres `#`/`##` et pulse liens `[[...]]` dans l'éditeur
-3. Détection proactive changement périphérique audio (A.5)
+1. Mode debug vumètre (settings) — PDD §3.4
+2. Affinage seuils en usage réel (pollution Discord, etc.)
+3. Création note via Ctrl+P (V2)
 
 Voir `PDD Cyber-Deck V2.md` pour le design complet.

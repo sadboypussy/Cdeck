@@ -510,7 +510,7 @@ body.audio-active .radar-ring {
 }
 
 .note-transition {
-  animation: noteFade 0.35s ease;
+  animation: noteFade var(--note-transition-ms, 350ms) ease;
 }
 
 @keyframes noteFade {

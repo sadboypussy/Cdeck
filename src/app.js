@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { initAudioReactive, onBands } from "./audio-reactive.js";
+import { initAudioReactive, onBands, getRecentEnergy, PEAK_LINK_THRESHOLD } from "./audio-reactive.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
 const YT_PLAYLIST = "PLrAXtmRdnEQy6nuLMH8k8C_4kJ8QqJZQ"; // Syrex-style nightcore playlist
@@ -159,8 +159,12 @@ export async function loadNote(id) {
     currentNoteId = note.id;
     const editor = $("#editor");
     editor.value = note.body;
+    const transitionMs = Math.round(180 + getRecentEnergy() * 320);
+    editor.style.setProperty("--note-transition-ms", `${transitionMs}ms`);
+    editor.classList.remove("note-transition");
+    void editor.offsetWidth;
     editor.classList.add("note-transition");
-    setTimeout(() => editor.classList.remove("note-transition"), 350);
+    setTimeout(() => editor.classList.remove("note-transition"), transitionMs + 50);
     renderTags(note.tags);
     renderEditorBackdrop();
     updateCursorPos();
@@ -392,11 +396,11 @@ function applyAudioReactive() {
     );
 
     document.querySelectorAll(".radar-node-neighbor").forEach((node, i) => {
-      node.classList.toggle("peak", peak > 0.2 && i % 2 === 0);
+      node.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD && i % 2 === 0);
     });
 
     document.querySelectorAll(".md-wikilink").forEach((link) => {
-      link.classList.toggle("peak", peak > 0.25);
+      link.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD);
     });
   });
 }

@@ -1,13 +1,22 @@
 use rustfft::num_complex::Complex;
 use serde::Serialize;
+use std::time::{Duration, Instant};
 
 pub const FFT_SIZE: usize = 2048;
 pub const NUM_BANDS: usize = 6;
+
+/// PDD §3.2 — silence > ~2 s avant retour repos
+pub const SILENCE_MS: u128 = 2000;
+/// PDD §3.2 — seuil élevé pour transitoires (kick/snare)
+pub const TRANSIENT_THRESHOLD: f32 = 0.15;
+/// PDD §3.2 — énergie sous laquelle on considère le silence en cours
+pub const SILENCE_ENERGY: f32 = 0.08;
 
 #[derive(Clone, Serialize)]
 pub struct AudioBandsPayload {
     pub bands: [f32; NUM_BANDS],
     pub silent: bool,
+    pub energy: f32,
 }
 
 pub fn aggregate_bands(magnitudes: &[f32], sample_rate: u32) -> [f32; NUM_BANDS] {
@@ -41,10 +50,16 @@ pub fn aggregate_bands(magnitudes: &[f32], sample_rate: u32) -> [f32; NUM_BANDS]
     bands.map(|b| b.clamp(0.0, 1.0))
 }
 
-pub fn apply_transient(prev_bass: f32, bands: &mut [f32; NUM_BANDS]) {
+pub fn apply_transient(prev_bass: f32, bands: &mut [f32; NUM_BANDS], threshold: f32) {
     let delta = bands[1] - prev_bass;
-    if delta > 0.15 {
+    if delta > threshold {
         bands[5] = bands[5].max(delta * 2.0).min(1.0);
+    }
+}
+
+pub fn smooth_bands(current: &mut [f32; NUM_BANDS], target: &[f32; NUM_BANDS], alpha: f32) {
+    for (c, t) in current.iter_mut().zip(target.iter()) {
+        *c += (*t - *c) * alpha;
     }
 }
 
@@ -52,12 +67,15 @@ pub fn magnitudes_from_fft(outdata: &[Complex<f32>]) -> Vec<f32> {
     outdata.iter().map(|c| c.norm()).collect()
 }
 
-pub fn is_silent(bands: &[f32; NUM_BANDS], silent_since: Option<std::time::Instant>) -> bool {
-    let energy: f32 = bands.iter().take(5).sum::<f32>() / 5.0;
-    if energy > 0.08 {
+pub fn is_silent(energy: f32, silent_since: &mut Option<Instant>, threshold_ms: u128) -> bool {
+    if energy > SILENCE_ENERGY {
+        *silent_since = None;
         return false;
     }
+    if silent_since.is_none() {
+        *silent_since = Some(Instant::now());
+    }
     silent_since
-        .map(|t| t.elapsed().as_millis() > 2000)
+        .map(|t| t.elapsed() > Duration::from_millis(threshold_ms as u64))
         .unwrap_or(false)
 }

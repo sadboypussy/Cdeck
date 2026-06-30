@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
+use std::sync::Arc;
 use wasapi::*;
 
 pub fn bytes_to_mono_f32(bytes: &[u8], channels: u16) -> Vec<f32> {
@@ -12,8 +14,12 @@ pub fn bytes_to_mono_f32(bytes: &[u8], channels: u16) -> Vec<f32> {
     mono
 }
 
-/// Capture loopback jusqu'à erreur ou arrêt. Timeout WASAPI = continuer, pas quitter.
-pub fn capture_loop(tx: mpsc::SyncSender<Vec<f32>>, chunksize: usize) -> Result<(), String> {
+/// Capture loopback jusqu'à arrêt explicite ou erreur.
+pub fn capture_loop(
+    tx: mpsc::SyncSender<Vec<f32>>,
+    chunksize: usize,
+    stop: Arc<AtomicBool>,
+) -> Result<(), String> {
     let device = get_default_device(&Direction::Render).map_err(|e| e.to_string())?;
     let mut audio_client = device.get_iaudioclient().map_err(|e| e.to_string())?;
 
@@ -40,7 +46,7 @@ pub fn capture_loop(tx: mpsc::SyncSender<Vec<f32>>, chunksize: usize) -> Result<
 
     audio_client.start_stream().map_err(|e| e.to_string())?;
 
-    loop {
+    while !stop.load(Ordering::Relaxed) {
         while sample_queue.len() > blockalign as usize * chunksize {
             let mut chunk_bytes = vec![0u8; blockalign as usize * chunksize];
             for b in chunk_bytes.iter_mut() {
@@ -53,13 +59,19 @@ pub fn capture_loop(tx: mpsc::SyncSender<Vec<f32>>, chunksize: usize) -> Result<
             }
         }
 
+        if stop.load(Ordering::Relaxed) {
+            break;
+        }
+
         capture_client
             .read_from_device_to_deque(&mut sample_queue)
             .map_err(|e| e.to_string())?;
 
         if h_event.wait_for_event(3000).is_err() {
-            // Silence ou latence — continuer la capture, ne pas couper le flux
             continue;
         }
     }
+
+    audio_client.stop_stream().ok();
+    Ok(())
 }

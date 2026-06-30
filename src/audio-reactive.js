@@ -2,8 +2,13 @@
 
 const BAND_COUNT = 6;
 const SILENCE_THRESHOLD_MS = 2000;
+/** PDD §3.1 — amplitude max ~3 % sur texte */
+const MAX_VISUAL_AMPLITUDE = 0.03;
+const PEAK_LINK_THRESHOLD = 0.25;
 
 let bands = new Array(BAND_COUNT).fill(0);
+let smoothedVisual = { energy: 0, bass: 0, peak: 0 };
+let recentEnergy = 0;
 let lastActive = Date.now();
 let tick = 0;
 let intervalId = null;
@@ -13,6 +18,10 @@ const listeners = new Set();
 
 export function getBands() {
   return [...bands];
+}
+
+export function getRecentEnergy() {
+  return recentEnergy;
 }
 
 export function isSilent() {
@@ -30,31 +39,55 @@ function notifyListeners(silentOverride) {
   for (const fn of listeners) fn(bands, silent);
 }
 
-function applyBands(newBands, silent) {
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function applyVisuals(bass, energy, peak, silent) {
+  const targetBass = silent ? 0 : bass;
+  const targetEnergy = silent ? 0 : energy;
+  const targetPeak = silent ? 0 : peak;
+  const decay = silent ? 0.06 : 0.35;
+
+  smoothedVisual.bass = lerp(smoothedVisual.bass, targetBass, decay);
+  smoothedVisual.energy = lerp(smoothedVisual.energy, targetEnergy, decay);
+  smoothedVisual.peak = lerp(smoothedVisual.peak, targetPeak, silent ? 0.12 : 0.5);
+
+  recentEnergy = smoothedVisual.energy;
+
+  document.documentElement.style.setProperty(
+    "--energy",
+    smoothedVisual.energy.toFixed(3)
+  );
+  document.documentElement.style.setProperty(
+    "--peak",
+    smoothedVisual.peak.toFixed(3)
+  );
+  document.documentElement.style.setProperty(
+    "--bass-delta",
+    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * 0.08).toFixed(4)}em`
+  );
+  document.documentElement.style.setProperty(
+    "--bass-glow",
+    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * 200).toFixed(1)}px`
+  );
+
+  document.body.classList.toggle("audio-active", !silent);
+  document.body.classList.toggle("audio-silent", silent);
+}
+
+function applyBands(newBands, silent, energyFromRust) {
   bands = newBands.slice(0, BAND_COUNT);
   while (bands.length < BAND_COUNT) bands.push(0);
 
   const bass = bands[0] ?? 0;
   const mid = ((bands[2] ?? 0) + (bands[3] ?? 0)) / 2;
   const peak = bands[5] ?? 0;
-  const energy = (bass + mid + (bands[4] ?? 0)) / 3;
+  const energy =
+    energyFromRust ?? (bass + mid + (bands[4] ?? 0)) / 3;
 
   if (!silent) lastActive = Date.now();
-
-  document.documentElement.style.setProperty("--energy", energy.toFixed(3));
-  document.documentElement.style.setProperty("--peak", peak.toFixed(3));
-  document.documentElement.style.setProperty(
-    "--bass-delta",
-    `${(bass * 0.03 * 0.08).toFixed(4)}em`
-  );
-  document.documentElement.style.setProperty(
-    "--bass-glow",
-    `${(bass * 6).toFixed(1)}px`
-  );
-
-  document.body.classList.toggle("audio-active", !silent);
-  document.body.classList.toggle("audio-silent", silent);
-
+  applyVisuals(bass, energy, peak, silent);
   notifyListeners(silent);
 }
 
@@ -90,7 +123,7 @@ export async function connectTauriAudio() {
     await listen("audio-bands", ({ payload }) => {
       usingRust = true;
       stopSimulation();
-      applyBands(payload.bands, payload.silent);
+      applyBands(payload.bands, payload.silent, payload.energy);
     });
     return true;
   } catch {
@@ -102,3 +135,5 @@ export async function initAudioReactive() {
   const connected = await connectTauriAudio();
   if (!connected) startSimulation();
 }
+
+export { PEAK_LINK_THRESHOLD };
