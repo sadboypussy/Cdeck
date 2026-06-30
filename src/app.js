@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { initAudioReactive, onBands, getRecentEnergy, PEAK_LINK_THRESHOLD, setIntensity, getIntensity } from "./audio-reactive.js";
+import { createRadar } from "./radar-gl.js";
+import { startAmbient, setAmbientEnergy } from "./ambient.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
 const YT_PLAYLIST = "PLrAXtmRdnEQy6nuLMH8k8C_4kJ8QqJZQ"; // Syrex-style nightcore playlist
@@ -9,6 +11,8 @@ let currentNoteId = null;
 let saveTimer = null;
 let allNotes = [];
 let hudSelected = 0;
+let radarGl = null;
+let currentNote = null;
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -18,12 +22,27 @@ async function init() {
   setupEditor();
   setupHud();
   setupDebugVu();
+  setupRadar();
+  startAmbient($("#ambient-canvas"));
   setupPlayer();
   await initAudioReactive();
   applyAudioReactive();
 
   allNotes = await invoke("list_notes");
   await loadNote(DEFAULT_NOTE);
+}
+
+function setupRadar() {
+  const canvas = $("#radar-canvas");
+  radarGl = createRadar(canvas);
+  radarGl.onSelect((id) => loadNote(id));
+
+  const loop = () => {
+    radarGl?.tick();
+    requestAnimationFrame(loop);
+  };
+  loop();
+  requestAnimationFrame(() => radarGl?.resize());
 }
 
 function setupClock() {
@@ -46,6 +65,12 @@ function setupTabs() {
       document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
       tab.classList.add("active");
       $(`#panel-${tab.dataset.tab}`).classList.add("active");
+      if (tab.dataset.tab === "radar") {
+        requestAnimationFrame(() => {
+          radarGl?.resize();
+          if (currentNote) renderRadar(currentNote);
+        });
+      }
     });
   });
 }
@@ -158,6 +183,7 @@ export async function loadNote(id) {
   try {
     const note = await invoke("get_note", { id });
     currentNoteId = note.id;
+    currentNote = note;
     const editor = $("#editor");
     editor.value = note.body;
     const transitionMs = Math.round(180 + getRecentEnergy() * 320);
@@ -177,83 +203,28 @@ export async function loadNote(id) {
 }
 
 function renderRadar(note) {
-  const nodesG = $("#radar-nodes");
-  const linksG = $("#radar-links");
-  nodesG.innerHTML = "";
-  linksG.innerHTML = "";
+  if (!radarGl) return;
 
-  const cx = 150;
-  const cy = 150;
-  const neighbors = note.neighbors.slice(0, 4);
-  const overflow = note.neighbors.length - neighbors.length;
+  radarGl.setNote(note);
+  $("#radar-active-label").textContent = note.id.replace(/_/g, " ");
+
+  const emptyEl = $("#radar-empty");
+  if (!note.neighbors?.length) {
+    emptyEl.classList.remove("hidden");
+  } else {
+    emptyEl.classList.add("hidden");
+  }
+
+  const overflow = (note.neighbors?.length ?? 0) - 4;
   const overflowEl = $("#radar-overflow");
   if (overflow > 0) {
-    overflowEl.textContent = `+${overflow} CTRL+P`;
+    overflowEl.textContent = `+${overflow} · CTRL+P`;
     overflowEl.classList.remove("hidden");
   } else {
     overflowEl.classList.add("hidden");
   }
 
-  const positions = neighbors.map((_, i) => {
-    const angle = (i / neighbors.length) * Math.PI * 2 - Math.PI / 2;
-    return {
-      x: cx + Math.cos(angle) * 95,
-      y: cy + Math.sin(angle) * 95,
-    };
-  });
-
-  neighbors.forEach((nid, i) => {
-    const pos = positions[i];
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", cx);
-    line.setAttribute("y1", cy);
-    line.setAttribute("x2", pos.x);
-    line.setAttribute("y2", pos.y);
-    line.setAttribute("class", "radar-link");
-    linksG.appendChild(line);
-  });
-
-  const center = makeNode(note.id, cx, cy, true);
-  nodesG.appendChild(center);
-
-  neighbors.forEach((nid, i) => {
-    const pos = positions[i];
-    const g = makeNode(nid, pos.x, pos.y, false);
-    g.addEventListener("click", () => loadNote(nid));
-    nodesG.appendChild(g);
-  });
-
-  document.querySelectorAll(".radar-ring").forEach((r) => r.classList.add("pulse"));
-}
-
-function makeNode(id, x, y, isCenter) {
-  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  g.setAttribute("class", `radar-node ${isCenter ? "radar-node-center" : "radar-node-neighbor"}`);
-  g.setAttribute("transform", `translate(${x}, ${y})`);
-
-  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  circle.setAttribute("r", isCenter ? "8" : "6");
-  g.appendChild(circle);
-
-  const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  label.setAttribute("class", "radar-node-label");
-  label.setAttribute("text-anchor", "middle");
-  label.setAttribute("y", "-12");
-  label.textContent = id.replace(/_/g, " ");
-  g.appendChild(label);
-
-  if (!isCenter) {
-    g.addEventListener("mouseenter", () => {
-      const tip = $("#radar-tooltip");
-      tip.textContent = id.replace(/_/g, " ");
-      tip.classList.add("visible");
-    });
-    g.addEventListener("mouseleave", () => {
-      $("#radar-tooltip").classList.remove("visible");
-    });
-  }
-
-  return g;
+  requestAnimationFrame(() => radarGl.resize());
 }
 
 function setupDebugVu() {
@@ -438,13 +409,15 @@ function applyAudioReactive() {
     const indicator = $("#reactivity-indicator");
     indicator.classList.toggle("silent", silent);
 
+    const energy = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--energy") || "0"
+    );
     const peak = parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue("--peak") || "0"
     );
 
-    document.querySelectorAll(".radar-node-neighbor").forEach((node, i) => {
-      node.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD && i % 2 === 0);
-    });
+    radarGl?.setEnergy(energy, peak);
+    setAmbientEnergy(energy);
 
     document.querySelectorAll(".md-wikilink").forEach((link) => {
       link.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD);

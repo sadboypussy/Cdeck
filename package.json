@@ -6,7 +6,11 @@
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
-    "build": "tauri build"
+    "start": "tauri dev",
+    "build": "tauri build",
+    "launch": "powershell -NoProfile -ExecutionPolicy Bypass -File ./launch.ps1",
+    "launch:release": "powershell -NoProfile -ExecutionPolicy Bypass -File ./launch.ps1 release",
+    "test:audio": "cargo run --release --manifest-path audio-spike/Cargo.toml"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

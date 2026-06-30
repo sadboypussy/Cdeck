@@ -1,0 +1,39 @@
+.glass-bar {
+  background: var(--glass);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+}
+
+.glass-panel {
+  background: linear-gradient(135deg, var(--glass) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--blur));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-inset {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 0 24px rgba(121, 255, 225, 0.04),
+    0 0 20px rgba(121, 255, 225, 0.03);
+}
+
+.glass-btn {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+.glass-btn:hover {
+  border-color: var(--cyan-dim);
+  box-shadow: 0 0 12px rgba(121, 255, 225, 0.15);
+  color: var(--cyan);
+}
+
+.glass-btn-primary {
+  border-color: rgba(121, 255, 225, 0.35);
+  color: var(--cyan);
+  box-shadow: 0 0 16px rgba(121, 255, 225, 0.12);
+}

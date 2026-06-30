@@ -1,0 +1,110 @@
+:root {
+  --bg-deep: #06060c;
+  --bg-main: #0a0a12;
+  --bg-panel: rgba(12, 14, 22, 0.72);
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-glow: rgba(121, 255, 225, 0.12);
+
+  --cyan: #79ffe1;
+  --cyan-dim: rgba(121, 255, 225, 0.55);
+  --pink: #ff3d7a;
+  --violet: #7c3aed;
+  --text: #e8eaef;
+  --text-dim: #7a8094;
+
+  --mono: "JetBrains Mono", monospace;
+  --term: "Share Tech Mono", monospace;
+  --body: "Inter", system-ui, sans-serif;
+
+  --blur: 16px;
+  --radius: 2px;
+  --intensity: 1;
+  --energy: 0;
+  --peak: 0;
+  --bass-delta: 0em;
+  --bass-glow: 0px;
+  --note-transition-ms: 350ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(121, 255, 225, 0.08), transparent),
+    var(--bg-deep);
+  pointer-events: none;
+}
+
+.device {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-width: 420px;
+  position: relative;
+  background: var(--bg-panel);
+  backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 24px 80px rgba(0, 0, 0, 0.65),
+    0 0 60px var(--glass-glow);
+  overflow: hidden;
+}
+
+.device-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.device > *:not(.device-noise):not(.bracket) {
+  position: relative;
+  z-index: 1;
+}
+
+.bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--cyan);
+  border-style: solid;
+  opacity: 0.5;
+  z-index: 2;
+  pointer-events: none;
+}
+.bracket-tl { top: 6px; left: 6px; border-width: 1px 0 0 1px; }
+.bracket-tr { top: 6px; right: 6px; border-width: 1px 1px 0 0; }
+.bracket-bl { bottom: 6px; left: 6px; border-width: 0 0 1px 1px; }
+.bracket-br { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }

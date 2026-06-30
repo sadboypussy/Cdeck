@@ -7,113 +7,101 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;600&family=Share+Tech+Mono&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Share+Tech+Mono&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles/main.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+        }
+      }
+    </script>
   </head>
   <body>
+    <div class="ambient-bg"></div>
+
     <div class="device" id="device">
-      <header class="topbar">
+      <div class="device-noise" aria-hidden="true"></div>
+      <span class="bracket bracket-tl"></span>
+      <span class="bracket bracket-tr"></span>
+      <span class="bracket bracket-bl"></span>
+      <span class="bracket bracket-br"></span>
+
+      <header class="topbar glass-bar">
         <span class="topbar-label">CYBER-DECK</span>
-        <span class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D debug audio">● REACT</span>
+        <span class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D debug audio">
+          <span class="pulse-dot"></span> REACT
+        </span>
         <span class="topbar-clock" id="clock">--:--</span>
       </header>
 
-      <section class="audio-tier" id="audio-tier">
-        <div class="scanner-frame">
+      <section class="audio-tier glass-panel" id="audio-tier">
+        <canvas class="ambient-canvas" id="ambient-canvas" aria-hidden="true"></canvas>
+        <div class="scanner-frame glass-inset">
           <div id="yt-player" class="yt-player"></div>
           <div class="scanner-overlay"></div>
+          <div class="scanner-corners"></div>
         </div>
         <div class="track-info">
-          <div class="data-stream" id="track-title">
-            DATA_STREAM // SYREX NIGHTCORE
-          </div>
+          <div class="data-stream" id="track-title">DATA_STREAM // SYREX NIGHTCORE</div>
         </div>
         <div class="terminal-controls">
-          <button class="term-btn" id="btn-prev" title="Précédent">◀◀</button>
-          <button class="term-btn term-btn-primary" id="btn-play" title="Play/Pause">
-            ▶
-          </button>
-          <button class="term-btn" id="btn-next" title="Suivant">▶▶</button>
-          <input
-            type="range"
-            class="volume-slider"
-            id="volume"
-            min="0"
-            max="100"
-            value="60"
-          />
+          <button class="term-btn glass-btn" id="btn-prev" title="Précédent">◀◀</button>
+          <button class="term-btn glass-btn term-btn-primary" id="btn-play" title="Play/Pause">▶</button>
+          <button class="term-btn glass-btn" id="btn-next" title="Suivant">▶▶</button>
+          <input type="range" class="volume-slider" id="volume" min="0" max="100" value="60" />
         </div>
       </section>
 
-      <nav class="tabswitch">
-        <button class="tab active" data-tab="notes" id="tab-notes">[ NOTES ]</button>
-        <button class="tab" data-tab="radar" id="tab-radar">[ RADAR ]</button>
+      <nav class="tabswitch glass-bar">
+        <button class="tab active" data-tab="notes" id="tab-notes">
+          <span class="tab-glow"></span> NOTES
+        </button>
+        <button class="tab" data-tab="radar" id="tab-radar">
+          <span class="tab-glow"></span> RADAR
+        </button>
       </nav>
 
       <main class="workzone">
         <div class="panel panel-notes active" id="panel-notes">
-          <div class="editor-wrap">
+          <div class="editor-wrap glass-inset">
             <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
-            <textarea
-              class="editor"
-              id="editor"
-              spellcheck="false"
-              placeholder="# Nouvelle note..."
-            ></textarea>
+            <textarea class="editor" id="editor" spellcheck="false" placeholder="# Nouvelle note…"></textarea>
           </div>
-          <div class="tags-bar" id="tags-bar"></div>
+          <div class="tags-bar glass-bar" id="tags-bar"></div>
         </div>
+
         <div class="panel panel-radar" id="panel-radar">
-          <svg class="radar-svg" id="radar-svg" viewBox="0 0 300 300">
-            <defs>
-              <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.15" />
-                <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
-              </radialGradient>
-            </defs>
-            <circle cx="150" cy="150" r="120" class="radar-ring ring-1" />
-            <circle cx="150" cy="150" r="85" class="radar-ring ring-2" />
-            <circle cx="150" cy="150" r="50" class="radar-ring ring-3" />
-            <circle cx="150" cy="150" r="120" fill="url(#radar-glow)" />
-            <line
-              class="radar-sweep"
-              x1="150"
-              y1="150"
-              x2="150"
-              y2="30"
-            />
-            <g id="radar-links"></g>
-            <g id="radar-nodes"></g>
-          </svg>
-          <div class="radar-tooltip" id="radar-tooltip"></div>
+          <canvas id="radar-canvas" class="radar-canvas"></canvas>
+          <div class="radar-hud">
+            <div class="radar-hud-title">PROXIMITY SCAN</div>
+            <div class="radar-hud-node" id="radar-active-label">—</div>
+          </div>
+          <div class="radar-empty hidden" id="radar-empty">
+            Aucun voisin — ajoute des liens <code>[[Note]]</code>
+          </div>
           <div class="radar-overflow hidden" id="radar-overflow"></div>
         </div>
       </main>
 
-      <footer class="statusbar">
+      <footer class="statusbar glass-bar">
         <span id="cursor-pos">LN 1 · COL 1</span>
         <span id="sync-status">SYNC OK</span>
-        <span>v0.1</span>
+        <span>v0.2</span>
       </footer>
     </div>
 
     <div class="hud-overlay hidden" id="hud">
-      <div class="hud-panel">
+      <div class="hud-panel glass-panel">
         <div class="hud-header">⌘ PALETTE — Ctrl+P</div>
-        <input
-          type="text"
-          class="hud-input"
-          id="hud-input"
-          placeholder="Rechercher une note..."
-          autocomplete="off"
-        />
+        <input type="text" class="hud-input" id="hud-input" placeholder="Rechercher une note…" autocomplete="off" />
         <ul class="hud-results" id="hud-results"></ul>
       </div>
     </div>
 
-    <div class="debug-vu hidden" id="debug-vu" aria-hidden="true">
+    <div class="debug-vu hidden glass-panel" id="debug-vu" aria-hidden="true">
       <div class="debug-vu-label">DEBUG VU — Ctrl+Shift+D</div>
       <label class="debug-intensity">
         INT

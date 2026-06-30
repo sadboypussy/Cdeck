@@ -6,10 +6,24 @@ Stack : **Tauri 2** (Rust + vanilla JS) · Windows 10/11 · portrait 9:16.
 
 ## Démarrage
 
+**Double-clic** : `Cyber-Deck.bat` (menu) ou `Dev Cyber-Deck.bat` (dev direct)
+
 ```bash
 npm install
-npm run dev
+npm run dev          # ou npm start
+npm run launch       # menu PowerShell
+npm run test:audio   # spike WASAPI seul
 ```
+
+### Launcher (Windows)
+
+| Fichier | Action |
+|---------|--------|
+| `Cyber-Deck.bat` | Menu interactif |
+| `Dev Cyber-Deck.bat` | Lance directement le mode dev |
+| `launch.ps1 dev` | Idem en ligne de commande |
+
+Options menu : **DEV** · **RELEASE** · **DEBUG EXE** · **AUDIO SPIKE** · **BUILD**
 
 ## Structure
 
