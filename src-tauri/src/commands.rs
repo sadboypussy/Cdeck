@@ -25,6 +25,12 @@ pub fn save_note(
 }
 
 #[tauri::command]
+pub fn create_note(app: AppHandle, id: String, body: Option<String>) -> Result<Note, String> {
+    let vault = notes::ensure_vault(&app)?;
+    notes::create_note(&vault, &id, body.as_deref())
+}
+
+#[tauri::command]
 pub fn search_notes(app: AppHandle, query: String) -> Result<Vec<NoteSummary>, String> {
     let vault = notes::ensure_vault(&app)?;
     notes::search_notes(&vault, &query)

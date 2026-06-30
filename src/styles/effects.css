@@ -1,0 +1,153 @@
+/* AAA effects — CRT shell, tab glitch transitions */
+
+.scanner-frame {
+  transform: perspective(800px) rotateX(0.6deg);
+  transform-origin: center top;
+}
+
+.scanner-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.65),
+    inset 0 0 80px rgba(121, 255, 225, 0.04);
+  border-radius: 1px;
+}
+
+.crt-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.85;
+}
+
+.scanner-frame.crt-active .yt-player iframe {
+  filter: saturate(0.5) contrast(1.18) brightness(0.78) hue-rotate(-12deg)
+    drop-shadow(0 0 2px rgba(121, 255, 225, 0.25));
+}
+
+/* Tab / panel transition */
+.workzone {
+  isolation: isolate;
+}
+
+.workzone-glitch {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(121, 255, 225, 0.12) 0,
+      rgba(121, 255, 225, 0.12) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  mix-blend-mode: screen;
+}
+
+.workzone-glitch.active {
+  animation: tab-glitch 0.38s steps(2, end) forwards;
+}
+
+@keyframes tab-glitch {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+    clip-path: inset(0 0 100% 0);
+  }
+  15% {
+    opacity: 0.9;
+    transform: translateX(-3px);
+    clip-path: inset(8% 0 62% 0);
+  }
+  30% {
+    opacity: 0.7;
+    transform: translateX(4px);
+    clip-path: inset(38% 0 28% 0);
+  }
+  45% {
+    opacity: 0.85;
+    transform: translateX(-2px);
+    clip-path: inset(62% 0 6% 0);
+  }
+  60% {
+    opacity: 0.5;
+    transform: translateX(1px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.panel.panel-fade-out {
+  animation: panel-fade-out 0.14s ease forwards;
+}
+
+.panel.panel-fade-in {
+  animation: panel-fade-in 0.22s ease forwards;
+}
+
+@keyframes panel-fade-out {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes panel-fade-in {
+  from {
+    opacity: 0;
+    filter: blur(3px) brightness(1.2);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+  }
+}
+
+.tab.tab-switching {
+  animation: tab-pulse 0.35s ease;
+}
+
+@keyframes tab-pulse {
+  0%,
+  100% {
+    text-shadow: none;
+  }
+  40% {
+    text-shadow: 0 0 18px rgba(121, 255, 225, 0.6);
+    color: var(--cyan);
+  }
+}
+
+/* HUD create row */
+.hud-results li.hud-create {
+  border-top: 1px solid rgba(121, 255, 225, 0.25);
+  color: var(--cyan);
+  background: rgba(121, 255, 225, 0.04);
+}
+
+.hud-results li.hud-create .hud-id {
+  color: var(--cyan-dim);
+}
+
+.hud-results li.hud-create::before {
+  content: "+ ";
+  opacity: 0.7;
+}

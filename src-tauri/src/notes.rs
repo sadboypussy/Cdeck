@@ -277,6 +277,34 @@ fn resolve_neighbors(vault: &Path, links: &[String]) -> Vec<String> {
         .collect()
 }
 
+fn sanitize_note_id(raw: &str) -> String {
+    raw.trim()
+        .replace(' ', "_")
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+        .collect()
+}
+
+pub fn create_note(vault: &Path, id: &str, body: Option<&str>) -> Result<Note, String> {
+    let id = sanitize_note_id(id);
+    if id.is_empty() {
+        return Err("Identifiant de note invalide".to_string());
+    }
+    let path = vault.join(format!("{id}.md"));
+    if path.exists() {
+        return Err(format!("La note existe déjà : {id}"));
+    }
+
+    let title = id.replace('_', " ");
+    let default_body = format!(
+        "# {title}\n\nNouvelle note VISUAL-CORE-77. Lie des notes avec [[wikilinks]].\n"
+    );
+    let note_body = body.unwrap_or(&default_body);
+    let tags = extract_inline_tags(note_body);
+
+    save_note(vault, &id, note_body, &tags)
+}
+
 pub fn save_note(vault: &Path, id: &str, body: &str, tags: &[String]) -> Result<Note, String> {
     let path = vault.join(format!("{id}.md"));
     let mut frontmatter = String::from("---\ntags:\n");

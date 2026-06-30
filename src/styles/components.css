@@ -343,6 +343,17 @@
   display: flex;
 }
 
+.panel.active.panel-fade-out {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.panel.active.panel-fade-in {
+  display: flex;
+}
+
 .panel-notes {
   min-height: 0;
 }

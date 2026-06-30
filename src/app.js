@@ -2,16 +2,19 @@ import { invoke } from "@tauri-apps/api/core";
 import { initAudioReactive, onBands, getRecentEnergy, PEAK_LINK_THRESHOLD, setIntensity, getIntensity } from "./audio-reactive.js";
 import { createRadar } from "./radar-gl.js";
 import { startAmbient, setAmbientEnergy } from "./ambient.js";
+import { startCrt } from "./crt.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
-const YT_PLAYLIST = "PLrAXtmRdnEQy6nuLMH8k8C_4kJ8QqJZQ"; // Syrex-style nightcore playlist
+const YT_PLAYLIST = "PLrAXtmRdnEQy6nuLMH8k8C_4kJ8QqJZQ";
 
 let player = null;
 let currentNoteId = null;
 let saveTimer = null;
 let allNotes = [];
 let hudSelected = 0;
+let hudCreateId = null;
 let radarGl = null;
+let crtFx = null;
 let currentNote = null;
 
 const $ = (sel) => document.querySelector(sel);
@@ -24,6 +27,9 @@ async function init() {
   setupDebugVu();
   setupRadar();
   startAmbient($("#ambient-canvas"));
+  const scannerFrame = $(".scanner-frame");
+  scannerFrame.classList.add("crt-active");
+  crtFx = startCrt($("#crt-canvas"), scannerFrame);
   setupPlayer();
   await initAudioReactive();
   applyAudioReactive();
@@ -58,20 +64,55 @@ function setupClock() {
   setInterval(tick, 30_000);
 }
 
+function sanitizeNoteId(raw) {
+  return raw
+    .trim()
+    .replace(/ /g, "_")
+    .replace(/[^\w\-]/g, "");
+}
+
+function switchTab(tabName) {
+  const current = document.querySelector(".tab.active");
+  if (current?.dataset.tab === tabName) return;
+
+  const workzone = $(".workzone");
+  const glitch = $("#workzone-glitch");
+  const nextTab = $(`.tab[data-tab="${tabName}"]`);
+  const currentPanel = document.querySelector(".panel.active");
+  const nextPanel = $(`#panel-${tabName}`);
+
+  document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active", "tab-switching"));
+  nextTab.classList.add("active", "tab-switching");
+
+  if (currentPanel) {
+    currentPanel.classList.add("panel-fade-out");
+  }
+
+  glitch.classList.remove("active");
+  void glitch.offsetWidth;
+  glitch.classList.add("active");
+
+  setTimeout(() => {
+    if (currentPanel) {
+      currentPanel.classList.remove("panel-fade-out", "active");
+    }
+    nextPanel.classList.add("active", "panel-fade-in");
+    setTimeout(() => nextPanel.classList.remove("panel-fade-in"), 260);
+
+    if (tabName === "radar") {
+      requestAnimationFrame(() => {
+        radarGl?.resize();
+        if (currentNote) renderRadar(currentNote);
+      });
+    }
+  }, 140);
+
+  setTimeout(() => glitch.classList.remove("active"), 400);
+}
+
 function setupTabs() {
   document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
-      tab.classList.add("active");
-      $(`#panel-${tab.dataset.tab}`).classList.add("active");
-      if (tab.dataset.tab === "radar") {
-        requestAnimationFrame(() => {
-          radarGl?.resize();
-          if (currentNote) renderRadar(currentNote);
-        });
-      }
-    });
+    tab.addEventListener("click", () => switchTab(tab.dataset.tab));
   });
 }
 
@@ -141,7 +182,9 @@ async function saveCurrentNote() {
   const body = $("#editor").value;
   const tags = extractTags(body);
   try {
-    await invoke("save_note", { id: currentNoteId, body, tags });
+    const note = await invoke("save_note", { id: currentNoteId, body, tags });
+    currentNote = note;
+    renderRadar(note);
     $("#sync-status").textContent = "SYNC OK";
   } catch {
     $("#sync-status").textContent = "SYNC ERR";
@@ -227,6 +270,25 @@ function renderRadar(note) {
   requestAnimationFrame(() => radarGl.resize());
 }
 
+async function refreshNoteList() {
+  allNotes = await invoke("list_notes");
+}
+
+async function createNoteFromHud(id) {
+  const cleanId = sanitizeNoteId(id);
+  if (!cleanId) return;
+  try {
+    await invoke("create_note", { id: cleanId, body: null });
+    await refreshNoteList();
+    await loadNote(cleanId);
+    toggleHud(false);
+    $("#sync-status").textContent = "CREATED";
+  } catch (err) {
+    console.warn("Création note:", err);
+    $("#sync-status").textContent = "CREATE ERR";
+  }
+}
+
 function setupDebugVu() {
   const panel = $("#debug-vu");
   const labels = ["sub", "bas", "lo", "mid", "hi", "pk"];
@@ -292,9 +354,13 @@ function setupHud() {
     } else if (e.key === "Enter") {
       e.preventDefault();
       const sel = items[hudSelected];
-      if (sel) {
+      if (sel?.dataset.create === "1") {
+        createNoteFromHud(sel.dataset.id);
+      } else if (sel) {
         loadNote(sel.dataset.id);
         toggleHud(false);
+      } else if (hudCreateId) {
+        createNoteFromHud(hudCreateId);
       }
     }
   });
@@ -307,6 +373,7 @@ function toggleHud(open) {
     hud.classList.remove("hidden");
     input.value = "";
     hudSelected = 0;
+    hudCreateId = null;
     searchHud("");
     input.focus();
   } else {
@@ -315,24 +382,41 @@ function toggleHud(open) {
 }
 
 async function searchHud(query) {
-  const results = query
-    ? await invoke("search_notes", { query })
-    : allNotes;
+  const results = query ? await invoke("search_notes", { query }) : allNotes;
   const ul = $("#hud-results");
-  ul.innerHTML = results
+  const q = query.trim();
+  const cleanId = sanitizeNoteId(q);
+  const exactMatch = results.some((n) => n.id.toLowerCase() === cleanId.toLowerCase());
+  hudCreateId = cleanId && !exactMatch ? cleanId : null;
+
+  let html = "";
+  if (hudCreateId) {
+    html += `<li data-id="${hudCreateId}" data-create="1" class="hud-create selected">
+      Créer « ${hudCreateId.replace(/_/g, " ")} »
+      <span class="hud-id">nouvelle note · Entrée</span>
+    </li>`;
+  }
+
+  html += results
     .map(
       (n, i) =>
-        `<li data-id="${n.id}" class="${i === 0 ? "selected" : ""}">
+        `<li data-id="${n.id}" class="${!hudCreateId && i === 0 ? "selected" : ""}">
           ${n.title}
           <span class="hud-id">${n.id}</span>
         </li>`
     )
     .join("");
 
+  ul.innerHTML = html;
+
   ul.querySelectorAll("li").forEach((li) => {
     li.addEventListener("click", () => {
-      loadNote(li.dataset.id);
-      toggleHud(false);
+      if (li.dataset.create === "1") {
+        createNoteFromHud(li.dataset.id);
+      } else {
+        loadNote(li.dataset.id);
+        toggleHud(false);
+      }
     });
   });
   hudSelected = 0;
@@ -418,6 +502,7 @@ function applyAudioReactive() {
 
     radarGl?.setEnergy(energy, peak);
     setAmbientEnergy(energy);
+    crtFx?.setEnergy(energy);
 
     document.querySelectorAll(".md-wikilink").forEach((link) => {
       link.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD);

@@ -10,6 +10,7 @@ pub fn run() {
             commands::list_notes,
             commands::get_note,
             commands::save_note,
+            commands::create_note,
             commands::search_notes,
             commands::get_vault_path,
         ])

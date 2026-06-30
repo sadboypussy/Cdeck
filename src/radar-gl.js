@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 const NEIGHBOR_RADIUS = 1.35;
 const MAX_NEIGHBORS = 4;
@@ -41,17 +44,29 @@ export function createRadar(canvas) {
   });
   scene.add(ringGroup);
 
+  const sweepGroup = new THREE.Group();
   const sweep = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.8, 0.02),
+    new THREE.PlaneGeometry(3.8, 0.04),
     new THREE.MeshBasicMaterial({
       color: 0x79ffe1,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
     })
   );
-  sweep.position.z = 0.01;
-  scene.add(sweep);
+  const sweepGlow = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.8, 0.14),
+    new THREE.MeshBasicMaterial({
+      color: 0x79ffe1,
+      transparent: true,
+      opacity: 0.2,
+      blending: THREE.AdditiveBlending,
+    })
+  );
+  sweepGlow.position.z = -0.002;
+  sweepGroup.add(sweepGlow, sweep);
+  sweepGroup.position.z = 0.01;
+  scene.add(sweepGroup);
 
   const linkGroup = new THREE.Group();
   const nodeGroup = new THREE.Group();
@@ -60,7 +75,7 @@ export function createRadar(canvas) {
   const centerMat = new THREE.MeshStandardMaterial({
     color: 0x79ffe1,
     emissive: 0x79ffe1,
-    emissiveIntensity: 0.8,
+    emissiveIntensity: 1.1,
     metalness: 0.3,
     roughness: 0.4,
   });
@@ -81,9 +96,19 @@ export function createRadar(canvas) {
   let energy = 0;
   let peak = 0;
   let sweepAngle = 0;
-  let raycaster = new THREE.Raycaster();
-  let pointer = new THREE.Vector2();
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
   let onSelect = () => {};
+
+  let composer = null;
+  let bloomPass = null;
+
+  function setupComposer(w, h) {
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.75, 0.4, 0.12);
+    composer.addPass(bloomPass);
+  }
 
   function resize() {
     const parent = canvas.parentElement;
@@ -94,6 +119,9 @@ export function createRadar(canvas) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    if (!composer) setupComposer(w, h);
+    composer.setSize(w, h);
+    bloomPass?.setSize(w, h);
   }
 
   function clearLinks() {
@@ -160,6 +188,9 @@ export function createRadar(canvas) {
   function setEnergy(e, p) {
     energy = e;
     peak = p;
+    if (bloomPass) {
+      bloomPass.strength = 0.5 + e * 0.7 + p * 0.45;
+    }
   }
 
   function pick(clientX, clientY) {
@@ -174,13 +205,15 @@ export function createRadar(canvas) {
   }
 
   function tick() {
-    sweepAngle += 0.012;
-    sweep.rotation.z = sweepAngle;
+    sweepAngle += 0.012 + energy * 0.006;
+    sweepGroup.rotation.z = sweepAngle;
     ringGroup.rotation.z = sweepAngle * 0.15;
 
     const breathe = 1 + energy * 0.08;
     centerMesh.scale.setScalar(breathe);
-    centerMat.emissiveIntensity = 0.5 + energy * 0.6;
+    centerMat.emissiveIntensity = 0.55 + energy * 0.75 + peak * 0.35;
+    sweep.material.opacity = 0.4 + energy * 0.25 + peak * 0.2;
+    sweepGlow.material.opacity = 0.12 + energy * 0.2 + peak * 0.15;
 
     neighborMeshes.forEach((m, i) => {
       const pulse = peak > 0.25 && i % 2 === 0 ? 1 + peak * 0.25 : 1;
@@ -192,7 +225,11 @@ export function createRadar(canvas) {
       linkLines.material.opacity = 0.2 + energy * 0.25;
     }
 
-    renderer.render(scene, camera);
+    if (composer) {
+      composer.render();
+    } else {
+      renderer.render(scene, camera);
+    }
   }
 
   canvas.addEventListener("click", (e) => pick(e.clientX, e.clientY));

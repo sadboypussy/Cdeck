@@ -6,7 +6,7 @@ Set-Location $Root
 function Write-Banner {
     Write-Host ""
     Write-Host "  +==================================+" -ForegroundColor Cyan
-    Write-Host "  |       CYBER-DECK LAUNCHER        |" -ForegroundColor Cyan
+    Write-Host "  |     VISUAL-CORE-77 LAUNCHER      |" -ForegroundColor Cyan
     Write-Host "  +==================================+" -ForegroundColor Cyan
     Write-Host ""
 }

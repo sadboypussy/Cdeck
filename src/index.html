@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cyber-Deck</title>
+    <title>VISUAL-CORE-77</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,7 +14,8 @@
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
         }
       }
     </script>
@@ -30,7 +31,7 @@
       <span class="bracket bracket-br"></span>
 
       <header class="topbar glass-bar">
-        <span class="topbar-label">CYBER-DECK</span>
+        <span class="topbar-label">VISUAL-CORE-77</span>
         <span class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D debug audio">
           <span class="pulse-dot"></span> REACT
         </span>
@@ -39,9 +40,10 @@
 
       <section class="audio-tier glass-panel" id="audio-tier">
         <canvas class="ambient-canvas" id="ambient-canvas" aria-hidden="true"></canvas>
-        <div class="scanner-frame glass-inset">
+        <div class="scanner-frame glass-inset crt-active">
           <div id="yt-player" class="yt-player"></div>
           <div class="scanner-overlay"></div>
+          <canvas class="crt-canvas" id="crt-canvas" aria-hidden="true"></canvas>
           <div class="scanner-corners"></div>
         </div>
         <div class="track-info">
@@ -65,6 +67,7 @@
       </nav>
 
       <main class="workzone">
+        <div class="workzone-glitch" id="workzone-glitch" aria-hidden="true"></div>
         <div class="panel panel-notes active" id="panel-notes">
           <div class="editor-wrap glass-inset">
             <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
@@ -95,8 +98,8 @@
 
     <div class="hud-overlay hidden" id="hud">
       <div class="hud-panel glass-panel">
-        <div class="hud-header">⌘ PALETTE — Ctrl+P</div>
-        <input type="text" class="hud-input" id="hud-input" placeholder="Rechercher une note…" autocomplete="off" />
+        <div class="hud-header">⌘ PALETTE — Ctrl+P · créer une note</div>
+        <input type="text" class="hud-input" id="hud-input" placeholder="Rechercher ou nommer une note…" autocomplete="off" />
         <ul class="hud-results" id="hud-results"></ul>
       </div>
     </div>
