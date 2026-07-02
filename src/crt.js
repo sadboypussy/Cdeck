@@ -2,6 +2,7 @@
 export function startCrt(canvas, hostEl) {
   const ctx = canvas.getContext("2d", { alpha: true });
   let energy = 0;
+  let targetEnergy = 0;
   let raf = 0;
   let t = 0;
 
@@ -24,6 +25,7 @@ export function startCrt(canvas, hostEl) {
     }
 
     ctx.clearRect(0, 0, w, h);
+    energy += (targetEnergy - energy) * 0.42;
     t += 0.016;
 
     // Scanlines — subtle (felt, not seen)
@@ -77,7 +79,7 @@ export function startCrt(canvas, hostEl) {
 
   return {
     setEnergy(e) {
-      energy = e;
+      targetEnergy = e;
     },
     destroy() {
       cancelAnimationFrame(raf);

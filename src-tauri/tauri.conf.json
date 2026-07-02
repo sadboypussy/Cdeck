@@ -14,12 +14,8 @@
         "title": "VISUAL-CORE-77",
         "width": 405,
         "height": 720,
-        "minWidth": 405,
-        "minHeight": 720,
-        "maxWidth": 405,
-        "maxHeight": 720,
-        "resizable": false,
-        "center": true
+        "resizable": true,
+        "center": false
       }
     ],
     "security": {

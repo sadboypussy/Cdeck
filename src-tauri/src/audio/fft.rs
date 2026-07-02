@@ -10,7 +10,7 @@ pub const SILENCE_MS: u128 = 2000;
 /// PDD §3.2 — seuil élevé pour transitoires (kick/snare)
 pub const TRANSIENT_THRESHOLD: f32 = 0.15;
 /// PDD §3.2 — énergie sous laquelle on considère le silence en cours
-pub const SILENCE_ENERGY: f32 = 0.08;
+pub const SILENCE_ENERGY: f32 = 0.055;
 
 #[derive(Clone, Serialize)]
 pub struct AudioBandsPayload {
@@ -68,8 +68,14 @@ pub fn apply_transient(prev_bass: f32, bands: &mut [f32; NUM_BANDS], threshold: 
     }
 }
 
-pub fn smooth_bands(current: &mut [f32; NUM_BANDS], target: &[f32; NUM_BANDS], alpha: f32) {
+pub fn smooth_bands_asymmetric(
+    current: &mut [f32; NUM_BANDS],
+    target: &[f32; NUM_BANDS],
+    attack: f32,
+    release: f32,
+) {
     for (c, t) in current.iter_mut().zip(target.iter()) {
+        let alpha = if *t > *c { attack } else { release };
         *c += (*t - *c) * alpha;
     }
 }

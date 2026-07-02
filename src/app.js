@@ -2,6 +2,7 @@ import { invoke } from "./tauri-shim.js";
 import { initAudioReactive, onBands, getRecentEnergy, PEAK_LINK_THRESHOLD, setIntensity, getIntensity } from "./audio-reactive.js";
 import { startAmbient, setAmbientEnergy } from "./ambient.js";
 import { startCrt } from "./crt.js";
+import { createProximityGrid } from "./proximity.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
 const YT_VIDEO_IDS = ["ScMzIvxBSi4", "M7lc1UVf-VE"];
@@ -17,6 +18,8 @@ let hudSelected = 0;
 let hudCreateId = null;
 let crtFx = null;
 let currentNote = null;
+let proximityGrid = null;
+let noteDirty = false;
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -67,6 +70,7 @@ function loadYouTubeApi() {
 async function init() {
   setupClock();
   setupTabs();
+  setupProximity();
   setupEditor();
   setupHud();
   setupWave();
@@ -128,17 +132,55 @@ function setupWave() {
 
 function setupTabs() {
   $("#tab-notes").addEventListener("click", () => switchTab("notes"));
-  $("#tab-links").addEventListener("click", () => switchTab("links"));
+  $("#tab-proximity").addEventListener("click", () => switchTab("proximity"));
 }
 
 function switchTab(tabName) {
-  const isLinks = tabName === "links";
+  const isProximity = tabName === "proximity";
 
-  $("#tab-notes").classList.toggle("active", !isLinks);
-  $("#tab-links").classList.toggle("active", isLinks);
-  $("#tabs-track").classList.toggle("links-on", isLinks);
-  $("#panel-notes").classList.toggle("active", !isLinks);
-  $("#panel-links").classList.toggle("active", isLinks);
+  $("#tab-notes").classList.toggle("active", !isProximity);
+  $("#tab-proximity").classList.toggle("active", isProximity);
+  $("#tabs-track").classList.toggle("proximity-on", isProximity);
+  $("#panel-notes").classList.toggle("active", !isProximity);
+  $("#panel-proximity").classList.toggle("active", isProximity);
+}
+
+function setupProximity() {
+  proximityGrid = createProximityGrid(
+    $("#proximity-grid"),
+    $("#proximity-fade-left"),
+    $("#proximity-fade-right"),
+    {
+      onSelect: async (id) => {
+        if (noteDirty) await saveCurrentNote();
+        await loadNote(id);
+        switchTab("notes");
+      },
+      onCenterClick: () => switchTab("notes"),
+    }
+  );
+
+  document.addEventListener("keydown", (e) => {
+    if (!$("#panel-proximity").classList.contains("active")) return;
+    if (!$("#hud").classList.contains("hidden")) return;
+    proximityGrid?.handleKey(e);
+  });
+}
+
+async function loadProximity(id) {
+  try {
+    const view = await invoke("get_galaxy", { id });
+    proximityGrid?.render(view);
+    const total = view.total ?? view.nodes.length;
+    const shown = view.nodes.length;
+    $("#proximity-meta").textContent =
+      total > shown
+        ? `${shown} proches · ${total - shown} en suggestion · clic pour ouvrir`
+        : `${shown} note${shown !== 1 ? "s" : ""} liée${shown !== 1 ? "s" : ""} · clic pour ouvrir`;
+  } catch (err) {
+    console.warn("[proximity]", err);
+    $("#proximity-meta").textContent = "Proximité indisponible";
+  }
 }
 
 function setupEditor() {
@@ -147,6 +189,7 @@ function setupEditor() {
   editor.addEventListener("input", () => {
     updateCursorPos();
     renderEditorBackdrop();
+    markNoteDirty();
     scheduleSave();
   });
   editor.addEventListener("click", handleWikilinkClick);
@@ -155,6 +198,40 @@ function setupEditor() {
     backdrop.scrollTop = editor.scrollTop;
     backdrop.scrollLeft = editor.scrollLeft;
   });
+
+  $("#btn-save-note").addEventListener("click", () => {
+    clearTimeout(saveTimer);
+    saveCurrentNote();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "s" && $("#panel-notes").classList.contains("active")) {
+      e.preventDefault();
+      clearTimeout(saveTimer);
+      saveCurrentNote();
+    }
+  });
+}
+
+function markNoteDirty() {
+  if (!noteDirty) {
+    noteDirty = true;
+    updateSaveButton();
+    $("#sync-status").textContent = "Modifié";
+    $("#sync-status").className = "";
+  }
+}
+
+function markNoteClean() {
+  noteDirty = false;
+  updateSaveButton();
+}
+
+function updateSaveButton() {
+  const btn = $("#btn-save-note");
+  btn.disabled = !noteDirty;
+  btn.textContent = noteDirty ? "Enregistrer" : "Enregistré";
+  btn.classList.toggle("is-saved", !noteDirty);
 }
 
 function escapeHtml(text) {
@@ -206,13 +283,18 @@ async function saveCurrentNote() {
   if (!currentNoteId) return;
   const body = $("#editor").value;
   const tags = extractTags(body);
+  const btn = $("#btn-save-note");
+  btn.disabled = true;
+  btn.textContent = "…";
   try {
     const note = await invoke("save_note", { id: currentNoteId, body, tags });
     currentNote = note;
-    renderLinks(note);
+    loadProximity(note.id);
+    markNoteClean();
     $("#sync-status").textContent = "Synced";
     $("#sync-status").className = "status-ok";
   } catch {
+    markNoteDirty();
     $("#sync-status").textContent = "Sync err";
     $("#sync-status").className = "";
   }
@@ -265,7 +347,8 @@ export async function loadNote(id) {
     renderTags(note.tags);
     renderEditorBackdrop();
     updateCursorPos();
-    renderLinks(note);
+    markNoteClean();
+    loadProximity(note.id);
     $("#sync-status").textContent = "Synced";
     $("#sync-status").className = "status-ok";
   } catch (err) {
@@ -273,49 +356,35 @@ export async function loadNote(id) {
   }
 }
 
-function renderLinks(note) {
-  const list = $("#links-list");
-  const emptyEl = $("#links-empty");
-  const overflowEl = $("#links-overflow");
-  const activeTitle = $("#links-active-title");
-  const activeId = $("#links-active-id");
+function applyAudioReactive() {
+  const title = $("#track-title");
+  title.classList.add("breathe");
+  const waveBars = $("#audio-wave")?.querySelectorAll("i") ?? [];
 
-  activeTitle.textContent = note.title || note.id.replace(/_/g, " ");
-  activeId.textContent = note.id;
+  onBands((bands, silent) => {
+    const indicator = $("#reactivity-indicator");
+    indicator.classList.toggle("silent", silent);
 
-  const neighbors = note.neighbors?.slice(0, 4) ?? [];
-  const overflow = (note.neighbors?.length ?? 0) - neighbors.length;
+    const energy = getRecentEnergy();
+    const peak = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--peak") || "0"
+    );
 
-  if (neighbors.length === 0) {
-    emptyEl.classList.remove("hidden");
-    list.innerHTML = "";
-  } else {
-    emptyEl.classList.add("hidden");
-    list.innerHTML = neighbors
-      .map((id) => {
-        const meta = allNotes.find((n) => n.id === id);
-        const label = meta?.title ?? id.replace(/_/g, " ");
-        return `<button type="button" class="link-card" data-id="${escapeHtml(id)}">
-          <span class="link-card-title">${escapeHtml(label)}</span>
-          <span class="link-card-id">${escapeHtml(id)}</span>
-        </button>`;
-      })
-      .join("");
+    setAmbientEnergy(energy);
+    crtFx?.setEnergy(energy);
 
-    list.querySelectorAll(".link-card").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        loadNote(btn.dataset.id);
-        switchTab("notes");
-      });
+    waveBars.forEach((bar, i) => {
+      const bandIdx = Math.min(bands.length - 1, Math.floor((i / waveBars.length) * bands.length));
+      const v = bands[bandIdx] ?? 0;
+      const h = Math.round(14 + Math.min(1, v * 1.25) * 86);
+      bar.style.height = `${h}%`;
+      bar.classList.toggle("lo", h < 20);
     });
-  }
 
-  if (overflow > 0) {
-    overflowEl.textContent = `+${overflow} autre${overflow > 1 ? "s" : ""} · Ctrl+P pour tout voir`;
-    overflowEl.classList.remove("hidden");
-  } else {
-    overflowEl.classList.add("hidden");
-  }
+    document.querySelectorAll(".md-wikilink").forEach((link) => {
+      link.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD);
+    });
+  });
 }
 
 async function refreshNoteList() {
@@ -570,37 +639,6 @@ function onPlayerStateChange(event) {
   } else if (event.data === YT.PlayerState.PAUSED) {
     setPlayIcon(false);
   }
-}
-
-function applyAudioReactive() {
-  const title = $("#track-title");
-  title.classList.add("breathe");
-  const waveBars = $("#audio-wave")?.querySelectorAll("i") ?? [];
-
-  onBands((bands, silent) => {
-    const indicator = $("#reactivity-indicator");
-    indicator.classList.toggle("silent", silent);
-
-    const energy = getRecentEnergy();
-    const peak = parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("--peak") || "0"
-    );
-
-    setAmbientEnergy(energy);
-    crtFx?.setEnergy(energy);
-
-    waveBars.forEach((bar, i) => {
-      const bandIdx = Math.min(bands.length - 1, Math.floor((i / waveBars.length) * bands.length));
-      const v = bands[bandIdx] ?? 0;
-      const h = Math.round(10 + Math.min(1, v * 1.4) * 90);
-      bar.style.height = `${h}%`;
-      bar.classList.toggle("lo", h < 24);
-    });
-
-    document.querySelectorAll(".md-wikilink").forEach((link) => {
-      link.classList.toggle("peak", peak > PEAK_LINK_THRESHOLD);
-    });
-  });
 }
 
 init().catch((e) => {

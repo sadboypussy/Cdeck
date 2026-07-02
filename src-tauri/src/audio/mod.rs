@@ -5,7 +5,8 @@ mod loopback;
 use device::watch_default_device;
 use fft::{
     aggregate_bands, apply_transient, filter_pollution, is_silent, magnitudes_from_fft,
-    smooth_bands, AudioBandsPayload, FFT_SIZE, NUM_BANDS, SILENCE_MS, TRANSIENT_THRESHOLD,
+    smooth_bands_asymmetric, AudioBandsPayload, FFT_SIZE, NUM_BANDS, SILENCE_MS,
+    TRANSIENT_THRESHOLD,
 };
 use loopback::capture_loop;
 use realfft::RealFftPlanner;
@@ -18,7 +19,7 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 use wasapi::initialize_mta;
 
-const EMIT_INTERVAL_MS: u64 = 33;
+const EMIT_INTERVAL_MS: u64 = 16;
 
 pub fn start(app: AppHandle) {
     thread::Builder::new()
@@ -116,9 +117,9 @@ fn run_analysis_loop(
                 let energy: f32 = bands.iter().take(5).sum::<f32>() / 5.0;
                 let silent_flag = is_silent(energy, &mut silent_since, SILENCE_MS);
                 if silent_flag {
-                    smooth_bands(&mut smoothed, &bands, 0.08);
+                    smooth_bands_asymmetric(&mut smoothed, &bands, 0.28, 0.14);
                 } else {
-                    smooth_bands(&mut smoothed, &bands, 0.35);
+                    smooth_bands_asymmetric(&mut smoothed, &bands, 0.78, 0.32);
                 }
 
                 let payload = AudioBandsPayload {

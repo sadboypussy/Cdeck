@@ -2,6 +2,7 @@
 
 let canvas, ctx, w, h, particles, rafId;
 let energy = 0;
+let targetEnergy = 0;
 
 function initParticles(count) {
   particles = Array.from({ length: count }, () => ({
@@ -24,7 +25,7 @@ export function startAmbient(el) {
 }
 
 export function setAmbientEnergy(e) {
-  energy = e;
+  targetEnergy = e;
 }
 
 function resize() {
@@ -40,6 +41,7 @@ function resize() {
 
 function loop() {
   if (!ctx) return;
+  energy += (targetEnergy - energy) * 0.38;
   ctx.clearRect(0, 0, w, h);
 
   const cx = w * 0.5;

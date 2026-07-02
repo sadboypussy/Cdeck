@@ -1,6 +1,8 @@
 mod audio;
 mod commands;
+mod galaxy;
 mod notes;
+mod window;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -13,9 +15,13 @@ pub fn run() {
             commands::create_note,
             commands::search_notes,
             commands::get_vault_path,
+            commands::get_galaxy,
         ])
         .setup(|app| {
             audio::start(app.handle().clone());
+            if let Err(e) = window::setup_secondary_monitor(app.handle()) {
+                eprintln!("[window] {e}");
+            }
             Ok(())
         })
         .run(tauri::generate_context!())

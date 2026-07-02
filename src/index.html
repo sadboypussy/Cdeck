@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=405, height=720, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no" />
     <title>VISUAL-CORE-77</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -80,7 +80,7 @@
         <div class="tabs-track" id="tabs-track">
           <div class="tab-indicator" aria-hidden="true"></div>
           <button class="tab active" data-tab="notes" id="tab-notes" type="button">Notes</button>
-          <button class="tab" data-tab="links" id="tab-links" type="button">Liens</button>
+          <button class="tab" data-tab="proximity" id="tab-proximity" type="button">Proximité</button>
         </div>
       </div>
 
@@ -91,25 +91,21 @@
             <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
             <textarea class="editor" id="editor" spellcheck="false" placeholder="# Nouvelle note…"></textarea>
           </div>
-          <div class="tags-bar" id="tags-bar"></div>
+          <div class="notes-footer">
+            <div class="tags-bar" id="tags-bar"></div>
+            <button type="button" class="btn-save" id="btn-save-note" disabled title="Ctrl+S">
+              Enregistrer
+            </button>
+          </div>
         </div>
 
-        <div class="panel panel-links" id="panel-links">
-          <p class="links-hint">Notes connectées à celle que tu édites — via <code>[[NomNote]]</code> dans le texte.</p>
-
-          <div class="links-active">
-            <span class="links-active-label">Note ouverte</span>
-            <span class="links-active-title" id="links-active-title">—</span>
-            <span class="links-active-id" id="links-active-id">—</span>
+        <div class="panel panel-proximity" id="panel-proximity">
+          <div class="proximity-stage">
+            <aside class="proximity-fade proximity-fade-left" id="proximity-fade-left" aria-label="Suggestions gauche"></aside>
+            <div class="proximity-center" id="proximity-grid"></div>
+            <aside class="proximity-fade proximity-fade-right" id="proximity-fade-right" aria-label="Suggestions droite"></aside>
           </div>
-
-          <div class="links-empty hidden" id="links-empty">
-            <p>Aucun lien pour l'instant.</p>
-            <p class="links-empty-example">Exemple : <code>[[WASAPI]]</code> ou <code>[[Tauri_Shell]]</code></p>
-          </div>
-
-          <div class="links-list" id="links-list"></div>
-          <p class="links-overflow hidden" id="links-overflow"></p>
+          <p class="proximity-meta" id="proximity-meta"></p>
         </div>
       </main>
 
@@ -131,7 +127,7 @@
       <div class="debug-vu-label">DEBUG VU — Ctrl+Shift+D</div>
       <label class="debug-intensity">
         INT
-        <input type="range" id="debug-intensity" min="25" max="200" value="100" />
+        <input type="range" id="debug-intensity" min="25" max="150" value="55" />
       </label>
       <div class="debug-vu-bars" id="debug-vu-bars"></div>
     </div>

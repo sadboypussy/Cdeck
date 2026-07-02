@@ -1,41 +1,53 @@
-/** Consommation bandes audio — Rust emit ou fallback simulation. */
+/** Consommation bandes audio — rAF 60 fps, attaque rapide / release doux. */
 
 import { listen } from "./tauri-shim.js";
 
 const BAND_COUNT = 6;
-const SILENCE_THRESHOLD_MS = 2000;
-const MAX_VISUAL_AMPLITUDE = 0.03;
-const PEAK_LINK_THRESHOLD = 0.25;
+const SILENCE_THRESHOLD_MS = 2200;
+const MAX_VISUAL_AMPLITUDE = 0.035;
+const PEAK_LINK_THRESHOLD = 0.28;
 const INTENSITY_KEY = "cyber-deck-intensity";
-const RUST_MIN_ENERGY = 0.025;
+
+const BAND_ATTACK = 0.62;
+const BAND_RELEASE = 0.16;
+const VISUAL_ATTACK = 0.5;
+const VISUAL_RELEASE = 0.12;
+const PEAK_ATTACK = 0.78;
+const PEAK_RELEASE = 0.2;
 
 let intensity = loadIntensity();
 
-let bands = new Array(BAND_COUNT).fill(0);
+const target = {
+  bands: new Array(BAND_COUNT).fill(0),
+  energy: 0,
+  silent: true,
+};
+
+let displayBands = new Array(BAND_COUNT).fill(0);
 let smoothedVisual = { energy: 0, bass: 0, peak: 0 };
 let recentEnergy = 0;
 let lastActive = Date.now();
-let tick = 0;
-let intervalId = null;
-let rustPayload = null;
+let simTick = 0;
+let rafId = null;
+let rustConnected = false;
 
 const listeners = new Set();
 
 function loadIntensity() {
   try {
-    const v = parseInt(localStorage.getItem(INTENSITY_KEY) ?? "100", 10);
-    return Number.isFinite(v) ? v / 100 : 1;
+    const v = parseInt(localStorage.getItem(INTENSITY_KEY) ?? "60", 10);
+    return Number.isFinite(v) ? v / 100 : 0.6;
   } catch {
-    return 1;
+    return 0.6;
   }
 }
 
 export function setIntensity(factor) {
-  intensity = Math.max(0.25, Math.min(2, factor));
+  intensity = Math.max(0.2, Math.min(1.5, factor));
   try {
     localStorage.setItem(INTENSITY_KEY, String(Math.round(intensity * 100)));
   } catch {
-    /* Tracking Prevention / private mode */
+    /* private mode */
   }
   document.documentElement.style.setProperty("--intensity", intensity.toFixed(2));
 }
@@ -47,7 +59,7 @@ export function getIntensity() {
 document.documentElement.style.setProperty("--intensity", intensity.toFixed(2));
 
 export function getBands() {
-  return [...bands];
+  return [...displayBands];
 }
 
 export function getRecentEnergy() {
@@ -64,90 +76,111 @@ export function onBands(fn) {
 }
 
 function notifyListeners(silent) {
-  for (const fn of listeners) fn(bands, silent);
+  for (const fn of listeners) fn(displayBands, silent);
 }
 
-function lerp(a, b, t) {
-  return a + (b - a) * t;
+function asymmetric(current, goal, attack, release) {
+  const rate = goal > current ? attack : release;
+  return current + (goal - current) * rate;
 }
 
-function applyVisuals(bass, energy, peak, silent) {
-  const targetBass = silent ? 0 : bass;
-  const targetEnergy = silent ? 0 : energy;
-  const targetPeak = silent ? 0 : peak;
-  const decay = silent ? 0.06 : 0.35;
-
-  smoothedVisual.bass = lerp(smoothedVisual.bass, targetBass, decay);
-  smoothedVisual.energy = lerp(smoothedVisual.energy, targetEnergy, decay);
-  smoothedVisual.peak = lerp(smoothedVisual.peak, targetPeak, silent ? 0.12 : 0.5);
-
-  recentEnergy = smoothedVisual.energy;
-
+function applyVisuals(silent) {
   document.documentElement.style.setProperty("--energy", smoothedVisual.energy.toFixed(3));
   document.documentElement.style.setProperty("--peak", smoothedVisual.peak.toFixed(3));
   document.documentElement.style.setProperty(
     "--bass-delta",
-    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 0.08).toFixed(4)}em`
+    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 0.07).toFixed(4)}em`
   );
   document.documentElement.style.setProperty(
     "--bass-glow",
-    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 200).toFixed(1)}px`
+    `${(smoothedVisual.bass * MAX_VISUAL_AMPLITUDE * intensity * 160).toFixed(1)}px`
   );
 
-  document.body.classList.toggle("audio-active", !silent && smoothedVisual.energy > 0.02);
-  document.body.classList.toggle("audio-silent", silent || smoothedVisual.energy <= 0.02);
+  document.body.classList.toggle("audio-active", !silent && smoothedVisual.energy > 0.025);
+  document.body.classList.toggle("audio-silent", silent || smoothedVisual.energy <= 0.025);
 }
 
-function applyBands(newBands, silent, energyFromRust) {
-  bands = newBands.slice(0, BAND_COUNT);
-  while (bands.length < BAND_COUNT) bands.push(0);
+function simulateTargets() {
+  simTick += 0.028;
+  const beat = Math.sin(simTick * 2.0);
+  const kick = beat > 0.82 ? (beat - 0.82) * 5.5 : 0;
+  const bass = 0.1 + Math.abs(Math.sin(simTick * 0.65)) * 0.2 + kick * 0.35;
+  const mid = 0.07 + Math.abs(Math.sin(simTick * 1.05)) * 0.14;
+  const high = 0.04 + Math.abs(Math.sin(simTick * 2.0)) * 0.1;
+  const peak = kick > 0.25 ? kick * 0.75 : 0;
 
-  const bass = bands[0] ?? 0;
-  const mid = ((bands[2] ?? 0) + (bands[3] ?? 0)) / 2;
-  const peak = bands[5] ?? 0;
-  const energy = energyFromRust ?? (bass + mid + (bands[4] ?? 0)) / 3;
-
-  if (!silent && energy > 0.02) lastActive = Date.now();
-  applyVisuals(bass, energy, peak, silent);
-  notifyListeners(silent);
+  target.bands = [bass, bass * 0.88, mid, mid * 0.8, high, peak];
+  target.energy = (bass + mid + high) / 3;
+  target.silent = false;
 }
 
-function simulate() {
-  if (rustPayload) {
-    const e = rustPayload.energy ?? 0;
-    if (e > RUST_MIN_ENERGY && !rustPayload.silent) {
-      applyBands(rustPayload.bands, rustPayload.silent, rustPayload.energy);
-      return;
-    }
+function frame() {
+  if (!rustConnected) simulateTargets();
+
+  for (let i = 0; i < BAND_COUNT; i++) {
+    const goal = target.silent ? 0 : Math.max(0, (target.bands[i] ?? 0) - 0.01);
+    displayBands[i] = asymmetric(displayBands[i], goal, BAND_ATTACK, BAND_RELEASE);
   }
 
-  tick += 0.05;
-  const beat = Math.sin(tick * 2.1);
-  const kick = beat > 0.85 ? (beat - 0.85) * 6.5 : 0;
-  const bass = 0.25 + Math.abs(Math.sin(tick * 0.7)) * 0.35 + kick * 0.4;
-  const mid = 0.15 + Math.abs(Math.sin(tick * 1.3 + 1)) * 0.25;
-  const high = 0.1 + Math.abs(Math.sin(tick * 2.8)) * 0.15;
-  const peak = kick > 0.3 ? kick : 0;
+  const bass = displayBands[0] ?? 0;
+  const mid = ((displayBands[2] ?? 0) + (displayBands[3] ?? 0)) / 2;
+  const peakBand = displayBands[5] ?? 0;
+  const energyGoal = target.silent
+    ? 0
+    : Math.max(target.energy ?? 0, (bass + mid + (displayBands[4] ?? 0)) / 3) * intensity;
 
-  applyBands([bass, bass * 0.9, mid, mid * 0.8, high, peak], false);
+  if (energyGoal > 0.025) lastActive = Date.now();
+
+  smoothedVisual.bass = asymmetric(
+    smoothedVisual.bass,
+    target.silent ? 0 : bass,
+    VISUAL_ATTACK,
+    VISUAL_RELEASE
+  );
+  smoothedVisual.energy = asymmetric(
+    smoothedVisual.energy,
+    energyGoal,
+    VISUAL_ATTACK,
+    VISUAL_RELEASE
+  );
+  smoothedVisual.peak = asymmetric(
+    smoothedVisual.peak,
+    target.silent ? 0 : peakBand,
+    PEAK_ATTACK,
+    PEAK_RELEASE
+  );
+
+  recentEnergy = smoothedVisual.energy;
+
+  const silent = isSilent() || (target.silent && smoothedVisual.energy < 0.02);
+  applyVisuals(silent);
+  notifyListeners(silent);
+
+  rafId = requestAnimationFrame(frame);
 }
 
-export function startSimulation() {
-  if (intervalId) return;
-  intervalId = setInterval(simulate, 33);
+function startLoop() {
+  if (rafId) return;
+  rafId = requestAnimationFrame(frame);
 }
 
-export function stopSimulation() {
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
+function stopLoop() {
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
   }
 }
 
 export async function connectTauriAudio() {
   try {
     await listen("audio-bands", ({ payload }) => {
-      rustPayload = payload;
+      rustConnected = true;
+      const bands = payload.bands ?? [];
+      for (let i = 0; i < BAND_COUNT; i++) {
+        target.bands[i] = bands[i] ?? 0;
+      }
+      target.energy = payload.energy ?? 0;
+      target.silent = Boolean(payload.silent);
     });
     return true;
   } catch {
@@ -156,10 +189,16 @@ export async function connectTauriAudio() {
 }
 
 export async function initAudioReactive() {
-  startSimulation();
+  startLoop();
   await connectTauriAudio();
 }
 
-startSimulation();
+export function startSimulation() {
+  startLoop();
+}
+
+export function stopSimulation() {
+  stopLoop();
+}
 
 export { PEAK_LINK_THRESHOLD };
