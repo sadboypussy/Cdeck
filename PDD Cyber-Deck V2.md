@@ -832,7 +832,11 @@ Question laissée ouverte en session design. **Décision retenue pour V3 :** com
 
 \#\#\# 17.5 Roadmap implémentation
 
-Voir \`PIVOT V3 — Notes First.md\` §9 : Phase A layout → B proximité tissée → C feel notes → D sources musique.
+Voir \`PIVOT V3 — Notes First.md\` §9 et \`PIVOT V3.1 — Framing acté.md\` §10 : Phase A layout → B proximité Draft/Navigate → C feel Writer → D Space config hook.
+
+\#\#\# 17.6 Framing V3.1 (juil. 2025)
+
+Document \`PIVOT V3.1 — Framing acté.md\` : Spaces (VC-77 writer first) · vaults séparés · esthétique clean · bande musique sans thumbnail · Draft/Navigate · fullscreen primary later · SYNTAX-CORE coder V4+.
 
 \---
 

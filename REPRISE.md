@@ -4,9 +4,9 @@
 
 ## Direction produit actuelle
 
-**Lire en priorité :** [`PIVOT V3 — Notes First.md`](PIVOT%20V3%20—%20Notes%20First.md)
+**Lire en priorité :** [`PIVOT V3.1 — Framing acté.md`](PIVOT%20V3.1%20—%20Framing%20acté.md) · contexte : [`PIVOT V3 — Notes First.md`](PIVOT%20V3%20—%20Notes%20First.md)
 
-Pivot acté (juil. 2025) : notes + navigation clever = **héros** ; musique = **atmosphere** (WASAPI d'abord) ; YouTube / plateformes = **addon optionnel** ; proximité **continue** (rails + ribbon), pas un onglet égal.
+Framing V3.1 : **VISUAL-CORE-77** (Writer Space) ship first · vault séparé · esthétique **clean** · bande musique titre+waveform (pas thumbnail) · Draft/Navigate proximité · fullscreen primary plus tard · **SYNTAX-CORE** coder en V4.
 
 Chaîne de valeur :
 
@@ -132,7 +132,8 @@ Scoring :
 | Doc | Version | Rôle |
 |-----|---------|------|
 | `PDD Cyber-Deck V2.md` | V1.1 (juin 2025) | Superdocument historique · technique · principes musicaux |
-| **`PIVOT V3 — Notes First.md`** | **V3.0 (juil. 2025)** | **Direction produit actuelle** |
+| **`PIVOT V3.1 — Framing acté.md`** | **V3.1 (juil. 2025)** | **Framing verrouillé — Spaces, UI, proximité** |
+| **`PIVOT V3 — Notes First.md`** | V3.0 (juil. 2025) | Pivot direction · roadmap |
 | `REPRISE.md` | ce fichier | Handoff dev |
 | `.cursor/rules/cyber-deck-pdd-core.mdc` | V3 | Règle agent Cursor |
 

@@ -6,8 +6,8 @@ Nom affiché : **VISUAL-CORE-77** · codename / repo : `Cdeck` / `cyber-deck`
 
 Stack : **Tauri 2** (Rust + vanilla JS, sans bundler) · Windows 10/11 · portrait compagnon (redimensionnable).
 
-> **Direction produit (V3) :** [`PIVOT V3 — Notes First.md`](PIVOT%20V3%20—%20Notes%20First.md)  
-> Notes + navigation clever = cœur · musique = atmosphere · YouTube / plateformes = addon optionnel.
+> **Framing acté (V3.1) :** [`PIVOT V3.1 — Framing acté.md`](PIVOT%20V3.1%20—%20Framing%20acté.md)  
+> **VISUAL-CORE-77** = Writer Space (ship first) · **SYNTAX-CORE** = Coder (V4+) · vaults séparés · UI clean · musique = sang de l'app.
 
 ## Pitch
 

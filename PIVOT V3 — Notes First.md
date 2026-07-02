@@ -1,6 +1,7 @@
 # PIVOT V3 — Notes First
 
 > **Statut :** direction produit actée — juillet 2025  
+> **Framing verrouillé :** [`PIVOT V3.1 — Framing acté.md`](PIVOT%20V3.1%20—%20Framing%20acté.md) ← **lire en second**  
 > **Repo :** `sadboypussy/Cdeck` · branche `master`  
 > **Documents liés :** `PDD Cyber-Deck V2.md` (V1.1) · `REPRISE.md` · `.cursor/rules/cyber-deck-pdd-core.mdc`
 
@@ -33,7 +34,9 @@ Ce pivot corrige un décalage : le PDD V1.1 disait déjà « notes = outil princ
 - Chaîne de valeur : **Musique → Ambiance → Concentration → Pensée → Navigation**
 - Notes + navigation clever = **destination** ; musique = **medium**
 - YouTube = **addon convenience**, pas identité
-- Musique : pas que YouTube — **toute source système** + à terme comptes plateformes ; vignette **optionnelle**, menu déroulant, **pas toujours affichée**
+- Musique : WASAPI système ; bande **titre défilant + heure + visualizer** — **pas de thumbnail** (V3.1)
+- Spaces : une app, **VISUAL-CORE-77** writer first · **SYNTAX-CORE** coder later · **vaults séparés**
+- Esthétique : **moderne clean**, pas cyberpunk hero (V3.1)
 - Proximité **continue**, pas un mode
 - Typographie + confiance + musicalité **sur le texte**, pas sur un visualiseur
 - La musique reste **load-bearing** pour le feel — pas décorative, pas hero UI
@@ -52,7 +55,8 @@ Ce pivot corrige un décalage : le PDD V1.1 disait déjà « notes = outil princ
 | **Repositionnement ChatGPT** | — | Compagnon de concentration | Chaîne de valeur musicale formalisée |
 | **Annexe A + implémentation** | juin 2025 | WASAPI, proximité Rust, shell Tauri | Audio OK ; UI encore « deck vidéo » |
 | **Pivot proximité UI** | juin 2025 | Abandon radar WebGL → grille 3×3 | Moteur conservé ; navigation encore en onglet |
-| **PIVOT V3 Notes First** | juil. 2025 | Notes hero · musique atmosphere · proximité tissée | **Ce document** |
+| **PIVOT V3 Notes First** | juil. 2025 | Notes hero · musique atmosphere · proximité tissée | Ce document |
+| **PIVOT V3.1 Framing** | juil. 2025 | Spaces · vaults séparés · esthétique clean · Draft/Navigate · bande musique sans thumbnail | **V3.1 doc** |
 
 ### 3.1 Ce qui ne change pas (fondations solides)
 
@@ -109,25 +113,23 @@ La musique alimente l'ambiance. L'ambiance soutient la concentration. La concent
 | **V3.2+** | Comptes plateformes (Spotify, etc.) | OAuth / API officielle — **pas d'extraction** (rejets PDD : pas yt-dlp) |
 | **Toutes phases** | Vignette / pochette | **Toggle utilisateur** — affichée seulement si demandée |
 
-### 5.3 UI cible — bande ambiance
+### 5.3 UI cible — bande ambiance (affiné V3.1)
+
+Voir **PIVOT V3.1 §5** pour le détail acté. Résumé :
 
 ```
 ┌─────────────────────────────────────────┐
-│ TOPBAR · status LIVE · horloge          │
+│ TOPBAR · LIVE · (horloge aussi en bande)│
 ├─────────────────────────────────────────┤
-│                                         │
 │         ZONE NOTE (hero ~75–85%)        │
-│    [rails proximité] [éditeur] [rails]  │
-│    [ribbon suggestions]                 │
-│                                         │
+│    Draft: éditeur seul · Navigate: rails│
 ├─────────────────────────────────────────┤
-│ ♪ Titre · source ▾ · ▶ · waveform · ▾  │  ← repliable / minimal
+│ ♪ titre défilant · 14:32 · waveform ▾   │  ← repliable, pas de thumbnail
 └─────────────────────────────────────────┘
 ```
 
-- Menu déroulant **Source** : Système (défaut) · YouTube intégré · (futur) Spotify…
-- Menu **Affichage** : waveform seule · + pochette · masquer bande
-- Pas de cadre 16:9 permanent · CRT/particules deviennent **option esthétique** ou fond global léger
+- Source menu : Système (défaut) · YouTube option · OAuth plateformes **hors V3**
+- **Pas** de cadre 16:9 · **pas** CRT hero · esthétique **clean**
 
 ---
 
@@ -136,14 +138,14 @@ La musique alimente l'ambiance. L'ambiance soutient la concentration. La concent
 > Question ouverte en session pivot : *« Mid-sentence, que montrer ? »*  
 > **Décision retenue (meilleur compromis V3) :** combinaison **rails latéraux + ribbon bas + focus mode**.
 
-### 6.1 Pendant l'écriture
+### 6.1 Draft vs Navigate (acté V3.1)
 
-| Élément | Comportement |
-|---------|--------------|
-| **Rails gauche/droite** | Top 2–3 voisins `get_galaxy` avec chip raison · clic = navigation |
-| **Ribbon bas** (collapsible) | Suggestions overflow (notes 4–8) · « thème commun avec X » |
-| **Autocomplete `[[`** | Dès `[[`, palette filtrée vault + voisins scorés en tête |
-| **Pas de popup intrusive** | Suggestions passives ; l'utilisateur **tire** ; l'app **propose** |
+| Posture | Proximité visible | Déclencheur |
+|---------|-------------------|-------------|
+| **Draft** (défaut) | Non — éditeur seul | Focus écriture · frappe active |
+| **Navigate** | Rails + ribbon + chips | Idle 4 s · `Tab` · `Ctrl+Shift+G` (grille) |
+
+Autocomplete `[[` reste actif en Draft. Voir V3.1 §4.
 
 ### 6.2 Pendant la lecture
 
