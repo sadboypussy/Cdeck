@@ -29,7 +29,9 @@ npm run dev
 | **VS Build Tools** | [Build Tools 2022](https://aka.ms/vs17/release/vs_buildtools.exe) → charge *Desktop development with C++* |
 | **WebView2** | Déjà présent sur Win10/11 dans la plupart des cas |
 
-Si `cargo introuvable` : le `.bat` tente de corriger ; sinon ajouter `%USERPROFILE%\.cargo\bin` au PATH utilisateur.
+Si `cargo introuvable` : le `.bat` tente de corriger ; sinon ajouter `%USERPROFILE%\.cargo\bin` au PATH utilisateur, fermer/réouvrir le terminal ou redémarrer le PC.
+
+**Vérif :** `cargo --version` · `node --version` · `npm --version` · `cargo check -p cyber-deck --manifest-path src-tauri/Cargo.toml` · premier `npm run dev` ~5 min (compile initiale).
 
 **Auth GitHub :** compte `sadboypussy` (403 → Gestionnaire d'identification Windows → supprimer `git:https://github.com`).
 

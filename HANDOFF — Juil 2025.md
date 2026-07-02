@@ -140,9 +140,11 @@ npm run dev
 | **VS Build Tools** | [vs_buildtools.exe](https://aka.ms/vs17/release/vs_buildtools.exe) → *Desktop development with C++* |
 | **WebView2** | Préinstallé sur la plupart des Win10/11 |
 
-**Erreur `cargo introuvable` :** fermer Cursor/terminal et rouvrir, ou lancer via `Dev Cyber-Deck.bat`.
+**Erreur `cargo introuvable` :** ajouter `%USERPROFILE%\.cargo\bin` au PATH utilisateur, fermer/réouvrir le terminal (ou redémarrer le PC), ou lancer via `Dev Cyber-Deck.bat`.
 
-**Vérif rapide :** `cargo --version` · `node --version` · `cargo check -p cyber-deck --manifest-path src-tauri/Cargo.toml`
+**Vérif rapide :** `cargo --version` · `node --version` · `npm --version` · `cargo check -p cyber-deck --manifest-path src-tauri/Cargo.toml`
+
+**Premier `npm run dev` :** première compilation Rust/Tauri ~5 min — normal ; les suivantes sont bien plus rapides.
 
 **Auth GitHub :** compte `sadboypussy` (si 403 : Gestionnaire d'identification Windows → supprimer `git:https://github.com` → reconnecter)
 
