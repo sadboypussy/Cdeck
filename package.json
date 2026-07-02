@@ -17,6 +17,6 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
-    "three": "^0.170.0"
+    "cyber-deck": "file:"
   }
 }

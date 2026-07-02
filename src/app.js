@@ -8,6 +8,7 @@ import {
   getIntensity,
 } from "./audio-reactive.js";
 import { createProximityUI } from "./proximity.js";
+import { bodyToReadHtml, bodyToEditBackdrop } from "./markdown.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
 const IDLE_MS = 4000;
@@ -310,47 +311,12 @@ function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function highlightLine(line) {
-  let html = escapeHtml(line);
-  html = html.replace(/\[\[([^\]]+)\]\]/g, '<span class="md-wikilink">[[$1]]</span>');
-  html = html.replace(/(^|\s)(#[\w\-]+)/g, '$1<span class="md-tag">$2</span>');
-  if (line.startsWith("# ")) return `<span class="md-h1">${html}</span>`;
-  if (line.startsWith("## ")) return `<span class="md-h2">${html}</span>`;
-  return html;
-}
-
 function renderEditorBackdrop() {
-  const backdrop = $("#editor-backdrop");
-  backdrop.innerHTML = $("#editor")
-    .value.split("\n")
-    .map((line) => highlightLine(line))
-    .join("\n");
+  $("#editor-backdrop").innerHTML = bodyToEditBackdrop($("#editor").value);
 }
 
 function renderReadView() {
-  const body = $("#editor").value;
-  const html = body
-    .split("\n")
-    .map((line) => {
-      if (!line.trim()) return "<p>&nbsp;</p>";
-      if (line.startsWith("# "))
-        return `<h1>${inlineRead(line.slice(2))}</h1>`;
-      if (line.startsWith("## "))
-        return `<h2>${inlineRead(line.slice(3))}</h2>`;
-      return `<p>${inlineRead(line)}</p>`;
-    })
-    .join("");
-  $("#read-view").innerHTML = html;
-}
-
-function inlineRead(text) {
-  let html = escapeHtml(text);
-  html = html.replace(/\[\[([^\]]+)\]\]/g, (_, label) => {
-    const id = label.trim().replace(/ /g, "_");
-    return `<button type="button" class="read-wikilink" data-note-id="${escapeHtml(id)}">${escapeHtml(label)}</button>`;
-  });
-  html = html.replace(/#[\w\-]+/g, (tag) => `<span class="read-tag">${tag}</span>`);
-  return html;
+  $("#read-view").innerHTML = bodyToReadHtml($("#editor").value);
 }
 
 function updateCursorPos() {

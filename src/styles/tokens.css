@@ -58,7 +58,7 @@ body {
   margin: 0;
 }
 
-.ambient-bg {
+.app-bg {
   position: fixed;
   inset: 0;
   background:

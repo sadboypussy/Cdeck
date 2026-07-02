@@ -212,46 +212,7 @@ body.read-mode .read-view {
   display: block;
 }
 
-.read-view h1 {
-  font-family: var(--display);
-  font-size: 1.35rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: var(--text);
-}
-
-.read-view h2 {
-  font-family: var(--display);
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin: 1rem 0 0.5rem;
-  color: var(--text);
-}
-
-.read-view p {
-  margin-bottom: 0.65rem;
-  color: var(--text-dim);
-}
-
-.read-view .read-wikilink {
-  color: var(--accent);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  font: inherit;
-  padding: 0;
-}
-
-.read-view .read-tag {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--accent-dim);
-  margin-right: 6px;
-}
-
+/* ── Footer note ── */
 .notes-footer {
   display: flex;
   align-items: flex-end;
@@ -259,6 +220,8 @@ body.read-mode .read-view {
   gap: 10px;
   padding-top: 8px;
 }
+
+/* ── Music band (réactivité seule — pas lecteur) ── */
 
 .notes-actions {
   display: flex;
@@ -415,7 +378,7 @@ body.audio-silent .device {
   box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35);
 }
 
-body.audio-silent .ambient-bg {
+body.audio-silent .app-bg {
   opacity: 0.55;
   transition: opacity 1.2s ease;
 }
@@ -443,7 +406,7 @@ body.audio-active .device {
     0 0 calc(24px + var(--energy, 0) * 40px) rgba(91, 141, 239, calc(0.03 + var(--energy, 0) * 0.06));
 }
 
-body.audio-active .ambient-bg {
+body.audio-active .app-bg {
   opacity: 1;
   transition: opacity 0.4s ease;
 }

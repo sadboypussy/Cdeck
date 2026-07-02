@@ -35,8 +35,14 @@ Vaults **séparés** — pas de wikilinks cross-space.
 ## Rejets V3
 
 - Hero vidéo 16:9 · lecteur intégré · YouTube IFrame · titre de piste · OAuth plateformes
+- **Onglets Notes / Proximité** — proximité tissée (rails, ribbon, `Ctrl+Shift+G`) uniquement
+- **Layout pré-pivot** : `audio-tier` hero, `crt.js`, `ambient.js`, `radar-gl.js`, Three.js vendor
 - OAuth plateformes · Coder Space UI · sync cloud · plugins · mobile · collab · IDE · AI assistant
 - yt-dlp · graphe global · cpal · spectre FFT brut IPC · vumètre permanent prod
+
+## Anti-régression (debug / agents)
+
+Ne **pas** réintroduire par réflexe en debug : onglet Proximité, hero vidéo, player YouTube, tier audio haut. Si besoin visuel, rester dans la bande basse + diégétique `app-bg`.
 
 ## Polish
 

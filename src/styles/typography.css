@@ -1,0 +1,220 @@
+/* Typographie Writer — mesure confortable + mode lecture */
+
+:root {
+  --prose: "Lora", "Georgia", "Times New Roman", serif;
+  --measure: min(38em, 100%);
+}
+
+.note-center {
+  max-width: calc(var(--measure) + 140px);
+  margin-inline: auto;
+  width: 100%;
+}
+
+.editor-wrap {
+  position: relative;
+}
+
+.editor-column {
+  position: absolute;
+  inset: 0;
+  left: 0;
+  right: 0;
+  max-width: var(--measure);
+  margin-inline: auto;
+  height: 100%;
+}
+
+.editor,
+.editor-backdrop,
+.read-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  border: none;
+  margin: 0;
+  background: transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(91, 141, 239, 0.2) transparent;
+  font-size: 15px;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+.editor {
+  resize: none;
+  outline: none;
+  caret-color: var(--accent);
+  color: var(--text);
+  z-index: 1;
+}
+
+.editor-backdrop {
+  pointer-events: none;
+  color: transparent;
+  z-index: 0;
+}
+
+.read-view {
+  z-index: 2;
+}
+
+.editor-backdrop .md-h1 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.45em;
+  letter-spacing: calc(-0.02em + var(--bass-delta, 0em));
+  text-shadow: 0 0 calc(4px + var(--bass-glow, 0px)) rgba(91, 141, 239, 0.22);
+}
+
+.editor-backdrop .md-h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.15em;
+  letter-spacing: -0.01em;
+}
+
+.editor-backdrop .md-h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.02em;
+}
+
+.editor-backdrop .md-quote {
+  color: transparent;
+  border-left: 2px solid rgba(91, 141, 239, 0.25);
+  padding-left: 0.65em;
+  display: block;
+}
+
+.editor-backdrop .md-code,
+.read-view code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: rgba(91, 141, 239, 0.08);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+/* ── Mode lecture ── */
+body.read-mode .read-view {
+  font-family: var(--prose);
+  font-size: 1.0625rem;
+  line-height: 1.82;
+  color: var(--text);
+  padding: 20px 22px 28px;
+}
+
+.read-view h1 {
+  font-family: var(--prose);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: calc(-0.02em + var(--bass-delta, 0em));
+  margin: 0 0 1rem;
+  color: var(--text);
+  text-shadow: 0 0 calc(6px + var(--bass-glow, 0px)) rgba(91, 141, 239, 0.18);
+}
+
+.read-view h2 {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 1.35rem 0 0.55rem;
+  color: var(--text);
+}
+
+.read-view h3.read-h3 {
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.4rem;
+  color: var(--text-dim);
+}
+
+.read-view p {
+  margin: 0 0 0.85rem;
+  color: var(--text);
+  hanging-punctuation: first last;
+}
+
+.read-view .read-gap {
+  height: 0.5rem;
+  margin: 0;
+}
+
+.read-view .read-quote {
+  margin: 0 0 1rem;
+  padding: 0.35rem 0 0.35rem 1rem;
+  border-left: 2px solid rgba(91, 141, 239, 0.45);
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.read-view .read-quote p {
+  margin-bottom: 0.35rem;
+  color: inherit;
+}
+
+.read-view .read-list {
+  margin: 0 0 1rem 1.1rem;
+  padding: 0;
+  color: var(--text);
+}
+
+.read-view .read-list li {
+  margin-bottom: 0.35rem;
+}
+
+.read-view .read-pre {
+  margin: 0 0 1rem;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--glass-border);
+  overflow-x: auto;
+}
+
+.read-view .read-pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.read-view .read-hr {
+  border: none;
+  height: 1px;
+  margin: 1.25rem 0;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+
+.read-view .read-wikilink {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font: inherit;
+  padding: 0;
+}
+
+.read-view .read-wikilink:hover {
+  color: var(--text);
+}
+
+.read-view .read-tag {
+  display: inline;
+  font-family: var(--mono);
+  font-size: 0.78em;
+  color: var(--accent-dim);
+  letter-spacing: 0.02em;
+}

@@ -7,13 +7,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles/main.css" />
   </head>
   <body class="posture-draft music-expanded">
-    <div class="ambient-bg"></div>
+    <div class="app-bg"></div>
 
     <div class="device" id="device">
       <header class="topbar">
@@ -31,9 +31,11 @@
           <div class="note-center">
             <div class="editor-shell" id="editor-shell">
               <div class="editor-wrap" id="editor-wrap">
-                <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
-                <textarea class="editor" id="editor" spellcheck="false" placeholder="# Nouvelle note…"></textarea>
-                <div class="read-view hidden" id="read-view" aria-label="Lecture"></div>
+                <div class="editor-column">
+                  <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
+                  <textarea class="editor" id="editor" spellcheck="false" placeholder="# Nouvelle note…"></textarea>
+                  <div class="read-view hidden" id="read-view" aria-label="Lecture"></div>
+                </div>
                 <ul class="wikilink-ac hidden" id="wikilink-ac" role="listbox"></ul>
               </div>
               <div class="notes-footer">

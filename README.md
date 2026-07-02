@@ -43,13 +43,12 @@ L'audio-réactif capte le **son du PC** (WASAPI) — lance ta musique dans Spoti
 
 ```
 src/
-  app.js            UI principale (notes, player, HUD, proximité)
-  proximity.js      Grille 3×3 + périphériques (→ focus mode V3)
+  app.js            UI principale (notes, postures, HUD, proximité)
+  proximity.js      Rails, ribbon, grille focus 3×3
+  markdown.js       Rendu MD lecture + backdrop édition
   tauri-shim.js     Bridge invoke/listen (pas de bundler)
   audio-reactive.js Bandes audio + lissage rAF
-  ambient.js        Particules ambiance
-  crt.js            Overlay CRT (zone vidéo — à relocaliser V3)
-  styles/           tokens, glass, components, effects
+  styles/           tokens, glass, components, effects, pivot-v3, typography
 src-tauri/          Vault notes, get_galaxy, capture WASAPI
 audio-spike/        Spike CLI WASAPI + FFT
 notes/              Référence vault (prod dans AppData)
@@ -62,7 +61,7 @@ notes/              Référence vault (prod dans AppData)
 | Layout notes-first | Workzone hero · bande musique bas · UI clean |
 | Draft / Navigate / Focus | Idle 4 s · Tab · `Ctrl+Shift+G` · Échap |
 | Proximité tissée | Rails + ribbon + chips raison · grille focus |
-| Notes | Autocomplete `[[` · Lire `Ctrl+E` · autosave 800 ms + flush visibility |
+| Notes | Autocomplete `[[` · Lire `Ctrl+E` (prose Lora, MD enrichi) · autosave 800 ms |
 | Audio | WASAPI loopback · waveform · statut Réactif/Silence · **pas lecteur** |
 | Vault | `vault-writer/` · migration depuis `vault/` |
 
@@ -76,7 +75,7 @@ Rust `get_galaxy` score les voisins avec raisons explicites :
 
 1. `Ctrl+P` → identifiant (`Ma_Idee`) → **Créer**
 2. Écrire avec `[[Autre_Note]]` et `#tags`
-3. Onglet **Proximité** (temporaire) ou bientôt rails latéraux
+3. **Navigate** (Tab ou idle 4 s) : rails latéraux · ribbon · `Ctrl+Shift+G` pour la grille
 
 Vault seed : ouvrir `PROTOCOLE_REINITIALISATION`.
 
