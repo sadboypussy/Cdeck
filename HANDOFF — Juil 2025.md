@@ -119,6 +119,8 @@ Musique → Ambiance → Concentration → Pensée → Navigation
 
 ## 5. Démarrage autre PC
 
+Workflow **deux machines** : `git pull` au début de session · commit/push en fin · même branche `master`.
+
 ```bash
 git clone https://github.com/sadboypussy/Cdeck.git
 cd Cdeck
@@ -127,11 +129,22 @@ npm install
 npm run dev
 ```
 
-**Prérequis Windows :** Node.js · Rust · VS Build Tools · WebView2
+**Double-clic :** `Dev Cyber-Deck.bat` — menu dev ; le script ajoute `%USERPROFILE%\.cargo\bin` au PATH si Rust vient d'être installé.
+
+### Prérequis Windows (une fois par machine)
+
+| Outil | Installation |
+|-------|----------------|
+| **Node.js** | [nodejs.org](https://nodejs.org) ou `winget install OpenJS.NodeJS.LTS` |
+| **Rust** | `winget install Rustlang.Rustup` → **nouveau terminal** obligatoire après install |
+| **VS Build Tools** | [vs_buildtools.exe](https://aka.ms/vs17/release/vs_buildtools.exe) → *Desktop development with C++* |
+| **WebView2** | Préinstallé sur la plupart des Win10/11 |
+
+**Erreur `cargo introuvable` :** fermer Cursor/terminal et rouvrir, ou lancer via `Dev Cyber-Deck.bat`.
+
+**Vérif rapide :** `cargo --version` · `node --version` · `cargo check -p cyber-deck --manifest-path src-tauri/Cargo.toml`
 
 **Auth GitHub :** compte `sadboypussy` (si 403 : Gestionnaire d'identification Windows → supprimer `git:https://github.com` → reconnecter)
-
-**Double-clic :** `Dev Cyber-Deck.bat`
 
 **Usage musique :** lance Spotify/navigateur **avant ou pendant** — l'app passe de *En veille* à *À l'écoute*.
 

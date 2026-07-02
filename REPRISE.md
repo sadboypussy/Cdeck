@@ -13,11 +13,25 @@
 ```bash
 git clone https://github.com/sadboypussy/Cdeck.git
 cd Cdeck
+git pull origin master
 npm install
 npm run dev
 ```
 
-Prérequis : Node.js · Rust · VS Build Tools · WebView2 · Windows
+**Double-clic :** `Dev Cyber-Deck.bat` (ajoute `.cargo\bin` au PATH si besoin)
+
+### Prérequis Windows (une fois par machine)
+
+| Outil | Installation |
+|-------|----------------|
+| **Node.js** | [nodejs.org](https://nodejs.org) ou `winget install OpenJS.NodeJS.LTS` |
+| **Rust** | `winget install Rustlang.Rustup` puis **fermer/réouvrir le terminal** (ou redémarrer le PC) |
+| **VS Build Tools** | [Build Tools 2022](https://aka.ms/vs17/release/vs_buildtools.exe) → charge *Desktop development with C++* |
+| **WebView2** | Déjà présent sur Win10/11 dans la plupart des cas |
+
+Si `cargo introuvable` : le `.bat` tente de corriger ; sinon ajouter `%USERPROFILE%\.cargo\bin` au PATH utilisateur.
+
+**Auth GitHub :** compte `sadboypussy` (403 → Gestionnaire d'identification Windows → supprimer `git:https://github.com`).
 
 Musique : lance **Spotify / navigateur** sur le PC — l'app capte le son (WASAPI). Pas de lecteur dans l'app.
 

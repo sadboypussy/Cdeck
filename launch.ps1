@@ -12,6 +12,10 @@ function Write-Banner {
 }
 
 function Test-Toolchain {
+    $cargoBin = Join-Path $env:USERPROFILE ".cargo\bin"
+    if (Test-Path $cargoBin) {
+        $env:Path = "$cargoBin;$env:Path"
+    }
     $ok = $true
     foreach ($tool in @("node", "npm", "cargo")) {
         if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
