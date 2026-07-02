@@ -104,27 +104,30 @@ Ben : *« fais au mieux »*. Décision :
 
 ---
 
-## 5. Bande musique — concept acté
+## 5. Bande musique — réactivité pure (pas hub audio)
 
-**Fini** : zone vidéo 16:9, thumbnail, CRT frame, NOW PLAYING badge.
+**Principe acté :** Cyber-Deck est un produit **audio-réactif**, pas un **générateur / hub audio**.
 
-**V3 bande ambiance** (bas ou haut, repliable) :
+- **Aucune connexion** Spotify, YouTube, compte plateforme
+- **Aucun lien** playlist à coller
+- **Aucun titre de morceau** — l'app ne sait pas ce qui joue et n'affiche pas de fausse métadonnée
+- L'utilisateur lance sa musique **où il veut** sur le PC (Spotify, navigateur, etc.)
+- L'app **écoute le mix système** (WASAPI) et imprègne l'UI
+
+**Bande basse (repliable) :**
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  ♪  Titre du morceau qui défile · artiste  —  14:32   │
-│  ▁▂▃▅▇ waveform / visualizer WASAPI                    │
-│  [source ▾]  [▶]  [replier]                          │
+│  RÉACTIF · ▁▂▃▅▇ waveform · 14:32 · ▾                  │
 └──────────────────────────────────────────────────────┘
 ```
 
-- **Pas de pochette / thumbnail** — nom en **défilement stylé** (marquee) si titre long
-- **Horloge** intégrée bande ou topbar (existant)
-- **Visualizer** = waveform actuelle (14 barres) — calé WASAPI
-- **Source** : système (défaut) · YouTube option menu · plateformes OAuth **hors V3**
-- **Repliée** : fine ligne + pulse dot LIVE + heure
+- **Statut** : `Réactif` / `Silence` (état du capteur, pas nom de piste)
+- **Waveform** : 14 barres WASAPI
+- **Horloge** · **replier**
+- **Topbar LIVE** : indicateur complémentaire (`Ctrl+Shift+D` debug)
 
-YouTube = addon zero-setup, jamais requis.
+Pas de lecteur intégré. Pas de YouTube IFrame en V3.
 
 ---
 

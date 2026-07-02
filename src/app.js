@@ -10,13 +10,8 @@ import {
 import { createProximityUI } from "./proximity.js";
 
 const DEFAULT_NOTE = "PROTOCOLE_REINITIALISATION";
-const YT_VIDEO_IDS = ["ScMzIvxBSi4", "M7lc1UVf-VE"];
 const IDLE_MS = 4000;
 
-let ytVideoIndex = 0;
-let player = null;
-let playerReady = false;
-let ytMounting = false;
 let currentNoteId = null;
 let saveTimer = null;
 let allNotes = [];
@@ -30,50 +25,8 @@ let readMode = false;
 let idleTimer = null;
 let acSelected = 0;
 let acMatches = [];
-let musicSource = "system";
-let audioSilent = true;
-let lastTrackText = "";
 
 const $ = (sel) => document.querySelector(sel);
-
-const ICON_PLAY = '<path d="M7 4l13 8-13 8V4z" fill="currentColor" />';
-const ICON_PAUSE = '<path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" fill="currentColor" />';
-
-function setPlayIcon(playing) {
-  $("#btn-play").innerHTML = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${playing ? ICON_PAUSE : ICON_PLAY}</svg>`;
-}
-
-function ytReady() {
-  return playerReady && player && typeof player.getPlayerState === "function";
-}
-
-function setPlayerVolume(value) {
-  if (ytReady() && typeof player.setVolume === "function") {
-    player.setVolume(value);
-  }
-}
-
-function loadYouTubeApi() {
-  return new Promise((resolve) => {
-    if (window.YT?.Player) {
-      resolve();
-      return;
-    }
-    if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      const wait = setInterval(() => {
-        if (window.YT?.Player) {
-          clearInterval(wait);
-          resolve();
-        }
-      }, 50);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://www.youtube.com/iframe_api";
-    document.head.appendChild(script);
-    window.onYouTubeIframeAPIReady = () => resolve();
-  });
-}
 
 async function init() {
   setupClock();
@@ -85,7 +38,6 @@ async function init() {
   setupWave();
   setupDebugVu();
   setupMusicBand();
-  setupPlayer();
 
   await initAudioReactive();
   applyAudioReactive();
@@ -603,27 +555,18 @@ export async function loadNote(id) {
   }
 }
 
-function setTrackTitle(text) {
-  const next = String(text).trim();
-  if (next === lastTrackText) return;
-  lastTrackText = next;
-  const marquee = $("#track-marquee");
-  const span = $("#track-title");
-  const long = next.length > 42;
-  marquee.classList.toggle("is-long", long);
-  span.textContent = long ? `${next} · ${next}` : next;
+function setAudioStatus(silent) {
+  const el = $("#audio-status");
+  el.textContent = silent ? "Silence" : "Réactif";
+  el.classList.toggle("is-live", !silent);
 }
 
 function applyAudioReactive() {
   const waveBars = $("#audio-wave")?.querySelectorAll("i") ?? [];
 
   onBands((bands, silent) => {
-    audioSilent = silent;
     $("#reactivity-indicator").classList.toggle("silent", silent);
-
-    if (musicSource === "system") {
-      setTrackTitle(silent ? "Silence · en attente de musique" : "Musique système · WASAPI");
-    }
+    setAudioStatus(silent);
 
     waveBars.forEach((bar, i) => {
       const bandIdx = Math.min(bands.length - 1, Math.floor((i / waveBars.length) * bands.length));
@@ -644,24 +587,6 @@ function setupMusicBand() {
   $("#btn-music-collapse").addEventListener("click", () => {
     document.body.classList.toggle("music-collapsed");
     document.body.classList.toggle("music-expanded");
-  });
-
-  $("#music-source").addEventListener("change", (e) => {
-    musicSource = e.target.value;
-    const ytControls = $("#btn-play");
-    const vol = $("#volume-wrap");
-    if (musicSource === "youtube") {
-      ytControls.classList.remove("hidden");
-      vol.classList.remove("hidden");
-      lastTrackText = "";
-      setTrackTitle("YouTube · ▶ pour lancer");
-    } else {
-      ytControls.classList.add("hidden");
-      vol.classList.add("hidden");
-      if (ytReady()) player.pauseVideo();
-      lastTrackText = "";
-      setTrackTitle(audioSilent ? "Silence · en attente de musique" : "Musique système · WASAPI");
-    }
   });
 }
 
@@ -806,81 +731,6 @@ async function searchHud(query) {
 function highlightHudItem(items) {
   items.forEach((li, i) => li.classList.toggle("selected", i === hudSelected));
   items[hudSelected]?.scrollIntoView({ block: "nearest" });
-}
-
-function mountPlayer() {
-  if (player || ytMounting) return;
-  ytMounting = true;
-  player = new YT.Player("yt-player", {
-    height: "100%",
-    width: "100%",
-    videoId: YT_VIDEO_IDS[ytVideoIndex],
-    host: "https://www.youtube-nocookie.com",
-    playerVars: {
-      autoplay: 0,
-      controls: 0,
-      modestbranding: 1,
-      rel: 0,
-      playsinline: 1,
-      origin: window.location.origin,
-      enablejsapi: 1,
-    },
-    events: {
-      onReady: (event) => {
-        player = event.target;
-        playerReady = true;
-        ytMounting = false;
-        setPlayerVolume(parseInt($("#volume").value, 10));
-      },
-      onStateChange: onPlayerStateChange,
-      onError: (event) => {
-        if (event.data === 101 || event.data === 150 || event.data === 100) {
-          if (ytVideoIndex < YT_VIDEO_IDS.length - 1) {
-            ytVideoIndex += 1;
-            player.loadVideoById(YT_VIDEO_IDS[ytVideoIndex]);
-            return;
-          }
-          setTrackTitle("YouTube indisponible · WASAPI actif");
-          lastTrackText = "";
-        }
-      },
-    },
-  });
-}
-
-function setupPlayer() {
-  $("#btn-play").addEventListener("click", async () => {
-    if (musicSource !== "youtube") return;
-    if (!player && !ytMounting) {
-      await loadYouTubeApi();
-      mountPlayer();
-      await new Promise((r) => setTimeout(r, 400));
-    }
-    if (!ytReady()) return;
-    const state = player.getPlayerState();
-    if (state === YT.PlayerState.PLAYING) {
-      player.pauseVideo();
-      setPlayIcon(false);
-    } else {
-      player.playVideo();
-      setPlayIcon(true);
-    }
-  });
-
-  $("#volume").addEventListener("input", (e) => {
-    setPlayerVolume(parseInt(e.target.value, 10));
-  });
-}
-
-function onPlayerStateChange(event) {
-  if (!ytReady() || musicSource !== "youtube") return;
-  if (event.data === YT.PlayerState.PLAYING) {
-    setPlayIcon(true);
-    const data = player.getVideoData();
-    if (data?.title) setTrackTitle(data.title);
-  } else if (event.data === YT.PlayerState.PAUSED) {
-    setPlayIcon(false);
-  }
 }
 
 init().catch((e) => {

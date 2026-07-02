@@ -44,7 +44,7 @@ Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), Web
 | **Liens** | Autocomplete `[[` · chips raison sur rails |
 | **Moteur liens** | `get_galaxy` Rust : wikilink, backlink, tags, Jaccard mots |
 | **Audio** | WASAPI loopback → FFT → 6 bandes → `audio-bands` @ 60 Hz |
-| **UI audio** | Bande basse : titre défilant + horloge + waveform · source Système/YouTube |
+| **UI audio** | Bande : Réactif/Silence + waveform + horloge · pas lecteur |
 | **Fenêtre** | Maximize sur **moniteur #2** au démarrage (sinon #1) |
 | **Palette** | `Ctrl+P` recherche + création note |
 | **Debug audio** | `Ctrl+Shift+D` |
@@ -53,7 +53,7 @@ Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), Web
 
 **Ne pas** ouvrir `index.html` seul — il faut **Tauri** (`npm run dev`).
 
-L'audio-réactif marche via **son système** (Spotify, navigateur…) — **sans embed**. YouTube lazy au ▶ est un confort optionnel, pas le cœur produit.
+L'audio-réactif capte le **son système** (Spotify, navigateur…) — pas de lecteur intégré, pas de titre affiché.
 
 ---
 

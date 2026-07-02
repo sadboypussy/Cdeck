@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Cyber-Deck — PIVOT V3.1 (vérité produit)
 
-**Pitch :** app à **Spaces** — surface de pensée musicale. Writer first (**VISUAL-CORE-77**), Coder later (**SYNTAX-CORE**). Musique = sang de l'app (WASAPI). Pas un lecteur avec des notes.
+**Pitch :** surface de pensée **audio-réactive** — pas un hub / lecteur audio. Writer first (**VISUAL-CORE-77**). WASAPI capte le son du PC ; l'utilisateur gère sa musique ailleurs.
 
 **Chaîne de valeur :** Musique → Ambiance → Concentration → Pensée → Navigation.
 
@@ -24,7 +24,7 @@ Vaults **séparés** — pas de wikilinks cross-space.
 
 1. **Workzone hero** — éditeur + read mode · typo soignée · 6 piliers P0 (autosave, wikilinks, proximité, typo, nav, musique subtile)
 2. **Proximité Draft/Navigate** — Draft défaut (rails off) · Navigate idle 4s / Tab / `Ctrl+Shift+G` grille · autocomplete `[[` toujours
-3. **Bande musique** — titre défilant + heure + waveform WASAPI · **pas thumbnail** · repliable · YouTube menu option
+3. **Bande réactivité** — statut Réactif/Silence + waveform + horloge · repliable · **pas titre, pas lecteur, pas compte**
 4. **Esthétique** — **moderne clean** (pas cyberpunk hero, pas CRT 16:9)
 
 ## Écrans
@@ -34,7 +34,7 @@ Vaults **séparés** — pas de wikilinks cross-space.
 
 ## Rejets V3
 
-- Hero vidéo 16:9 · thumbnail pochette · onglets Notes|Proximité égaux
+- Hero vidéo 16:9 · lecteur intégré · YouTube IFrame · titre de piste · OAuth plateformes
 - OAuth plateformes · Coder Space UI · sync cloud · plugins · mobile · collab · IDE · AI assistant
 - yt-dlp · graphe global · cpal · spectre FFT brut IPC · vumètre permanent prod
 

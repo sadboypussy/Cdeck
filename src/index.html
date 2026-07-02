@@ -52,30 +52,11 @@
         </div>
       </main>
 
-      <section class="music-band" id="music-band">
+      <section class="music-band" id="music-band" aria-label="Réactivité audio">
         <div class="music-band-main">
-          <span class="music-icon" aria-hidden="true">♪</span>
-          <div class="track-marquee-wrap">
-            <div class="track-marquee" id="track-marquee">
-              <span id="track-title">Musique système · WASAPI</span>
-            </div>
-          </div>
+          <span class="audio-status" id="audio-status" aria-live="polite">Silence</span>
+          <div class="audio-wave" id="audio-wave" aria-hidden="true"></div>
           <time class="music-clock" id="music-clock">--:--</time>
-        </div>
-        <div class="audio-wave" id="audio-wave" aria-hidden="true"></div>
-        <div class="music-band-controls">
-          <select class="music-source" id="music-source" title="Source audio">
-            <option value="system">Système</option>
-            <option value="youtube">YouTube</option>
-          </select>
-          <button class="icon-btn icon-btn-sm hidden" id="btn-play" type="button" title="Play/Pause YouTube">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M7 4l13 8-13 8V4z" fill="currentColor" />
-            </svg>
-          </button>
-          <label class="volume volume-sm hidden" id="volume-wrap">
-            <input type="range" id="volume" min="0" max="100" value="60" />
-          </label>
           <button class="icon-btn icon-btn-sm" id="btn-music-collapse" type="button" title="Replier la bande">▾</button>
         </div>
       </section>
@@ -100,10 +81,6 @@
         </div>
         <p class="proximity-meta" id="proximity-meta"></p>
       </div>
-    </div>
-
-    <div class="yt-mount" id="yt-mount" aria-hidden="true">
-      <div id="yt-player"></div>
     </div>
 
     <div class="hud-overlay hidden" id="hud">

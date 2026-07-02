@@ -30,7 +30,7 @@ npm run launch       # menu PowerShell
 npm run test:audio   # spike WASAPI seul
 ```
 
-> L'audio-réactif fonctionne via **WASAPI loopback** dès qu'une musique joue sur le système — Spotify, navigateur, etc. **Sans embed obligatoire.**
+L'audio-réactif capte le **son du PC** (WASAPI) — lance ta musique dans Spotify, navigateur, etc. L'app ne lit pas la musique et n'affiche pas de titre.
 
 ### Launcher (Windows)
 
@@ -64,7 +64,7 @@ notes/              Référence vault (prod dans AppData)
 | Draft / Navigate / Focus | Idle 4 s · Tab · `Ctrl+Shift+G` · Échap |
 | Proximité tissée | Rails + ribbon + chips raison · grille focus |
 | Notes | Autocomplete `[[` · Lire `Ctrl+E` · autosave 800 ms + flush visibility |
-| Audio | WASAPI · waveform · titre défilant · source Système/YouTube |
+| Audio | WASAPI loopback · waveform · statut Réactif/Silence · **pas lecteur** |
 | Vault | `vault-writer/` · migration depuis `vault/` |
 
 ### Moteur proximité
@@ -83,11 +83,9 @@ Vault seed : ouvrir `PROTOCOLE_REINITIALISATION`.
 
 ## Audio
 
-- **WASAPI loopback** : mix système → FFT → 6 bandes → `emit("audio-bands")`
-- Effets **musicaux** (~3 % amplitude) : titres, wikilinks, transitions note
+- **WASAPI loopback** : mix système → effets musicaux sur texte (~3 %)
+- Bande : statut **Réactif** / **Silence** + waveform — pas nom de piste
 - Debug : `Ctrl+Shift+D`
-
-YouTube intégré = confort zero-setup, **pas requis**. Erreur embed 150 → ignorer, WASAPI suffit.
 
 ## Documentation
 
