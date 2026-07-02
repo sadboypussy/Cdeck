@@ -129,6 +129,17 @@ Ben : *« fais au mieux »*. Décision :
 
 Pas de lecteur intégré. Pas de YouTube IFrame en V3.
 
+### Encouragement diégétique (pas tutorial)
+
+L'app **ne dit pas** « ouvre Spotify ». Elle **montre** :
+
+| État | Ressenti |
+|------|----------|
+| **En veille** (pas de son) | UI plus plate, désaturée, waveform basse, bordure éditeur terne |
+| **À l'écoute** (WASAPI détecte) | Lueur douce, saturation revient, LIVE pulse, texte respire |
+
+L'utilisateur comprend par **contraste sensoriel** — quand la musique s'arrête, la pièce « meurt ». Aucun bouton, aucun compte, aucun titre de piste.
+
 ---
 
 ## 6. Piliers qualité (tous P0 — ordre d'implémentation)

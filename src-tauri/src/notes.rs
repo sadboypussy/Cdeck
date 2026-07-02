@@ -78,12 +78,33 @@ pub fn ensure_vault(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if !vault.exists() {
         fs::create_dir_all(&vault).map_err(|e| e.to_string())?;
         seed_vault(&vault)?;
+    } else {
+        ensure_seed_notes(&vault)?;
     }
     Ok(vault)
 }
 
 fn seed_vault(vault: &Path) -> Result<(), String> {
-    let seeds: &[(&str, &str)] = &[
+    for (name, content) in seed_catalog() {
+        let path = vault.join(name);
+        fs::write(path, content).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Ajoute les notes seed manquantes sans écraser un vault existant.
+fn ensure_seed_notes(vault: &Path) -> Result<(), String> {
+    for (name, content) in seed_catalog() {
+        let path = vault.join(name);
+        if !path.exists() {
+            fs::write(path, content).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+fn seed_catalog() -> &'static [(&'static str, &'static str)] {
+    &[
         (
             "PROTOCOLE_REINITIALISATION.md",
             r##"---
@@ -94,15 +115,17 @@ tags:
 
 # PROTOCOLE REINITIALISATION
 
-Séquence de boot du Cyber-Deck. La capture audio passe par [[WASAPI]] en loopback système.
+Espace d'écriture **VISUAL-CORE-77**. Le texte vit au rythme du **son de ton PC** — Spotify, navigateur, ce que tu veux. L'app n'a pas de lecteur : elle **écoute**.
 
-## Pipeline
+## Démarrer
 
-Le flux spectral est décrit dans [[Annexe_A_Pipeline]]. Le shell Tauri ([[Tauri_Shell]]) héberge l'interface 9:16.
+1. Lance ta musique ailleurs (habitude focus)
+2. Écris ici — la pièce passe de *en veille* à *à l'écoute*
+3. Lie tes idées : [[WASAPI]] · [[Annexe_A_Pipeline]] · [[Journal_Focus]]
 
-## Ambiance
+## Navigation
 
-Playlist par défaut : [[Syrex_Nightcore]]. La musique imprègne l'espace — pas un visualiseur décoratif.
+`Ctrl+P` palette · `[[wikilinks]]` · proximité (Tab après 4 s) · `Ctrl+Shift+G` focus grille
 "##,
         ),
         (
@@ -155,13 +178,13 @@ tags:
 
 # Tauri Shell
 
-Fenêtre portrait 380×780. Zone supérieure ≈ 1/3 (audio), inférieure ≈ 2/3 (notes / radar).
+Fenêtre compagnon second écran. Notes hero · proximité tissée · réactivité WASAPI.
 
-## Navigation
+## Raccourcis
 
-Liens `[[wikilinks]]` cliquables · Radar de proximité · Palette `Ctrl+P`.
+`Ctrl+P` · `Ctrl+S` · `Ctrl+E` lire · `Ctrl+Shift+G` proximité
 
-Contexte : [[PROTOCOLE_REINITIALISATION]]
+Voir [[PROTOCOLE_REINITIALISATION]] · [[Journal_Focus]]
 "##,
         ),
         (
@@ -172,20 +195,39 @@ tags:
   - "#focus"
 ---
 
-# Syrex Nightcore
+# Focus musical
 
-Source de rythme par défaut. La réactivité visuelle est **musicale**, pas Winamp — respiration ~3 %, pulses sur transitoires.
+La musique ne se lance pas dans l'app — elle vit **ailleurs sur le PC**. Ici, l'espace **s'éveille** quand le son arrive.
 
-Référencé depuis [[PROTOCOLE_REINITIALISATION]].
+Sans musique : en veille. Avec : à l'écoute. Tu le sens avant de le nommer.
+
+Voir [[Journal_Focus]] · [[PROTOCOLE_REINITIALISATION]]
 "##,
         ),
-    ];
+        (
+            "Journal_Focus.md",
+            r##"---
+tags:
+  - "#journal"
+  - "#focus"
+---
 
-    for (name, content) in seeds {
-        let path = vault.join(name);
-        fs::write(path, content).map_err(|e| e.to_string())?;
-    }
-    Ok(())
+# Journal Focus
+
+Note libre pour capturer ce qui traverse. Les liens créent le réseau — pas les dossiers.
+
+## Amorces
+
+- Une idée en cours → lie [[PROTOCOLE_REINITIALISATION]]
+- Technique audio → [[WASAPI]] · [[Annexe_A_Pipeline]]
+- Session productive → tag `#focus`
+
+## Aujourd'hui
+
+(écris ici)
+"##,
+        ),
+    ]
 }
 
 fn note_id_from_path(path: &Path) -> String {

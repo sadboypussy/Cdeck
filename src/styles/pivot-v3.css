@@ -408,6 +408,55 @@ body.music-collapsed #btn-music-collapse {
   height: 28px;
 }
 
+/* ── Diégétique : la pièce dort sans son, s'éveille avec ── */
+body.audio-silent .device {
+  transition: filter 1.2s ease, box-shadow 1.2s ease;
+  filter: saturate(0.72) brightness(0.94);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35);
+}
+
+body.audio-silent .ambient-bg {
+  opacity: 0.55;
+  transition: opacity 1.2s ease;
+}
+
+body.audio-silent .editor-wrap {
+  border-color: rgba(255, 255, 255, 0.05);
+  transition: border-color 1s ease, box-shadow 1s ease;
+}
+
+body.audio-silent .pulse-dot {
+  animation-duration: 4.5s;
+  opacity: 0.35;
+}
+
+body.audio-silent .audio-wave i {
+  opacity: 0.18 !important;
+  transition: opacity 0.8s ease;
+}
+
+body.audio-active .device {
+  transition: filter 0.5s ease, box-shadow 0.35s ease;
+  filter: saturate(1) brightness(1);
+  box-shadow:
+    inset 0 0 0 1px rgba(91, 141, 239, calc(0.04 + var(--energy, 0) * 0.08)),
+    0 0 calc(24px + var(--energy, 0) * 40px) rgba(91, 141, 239, calc(0.03 + var(--energy, 0) * 0.06));
+}
+
+body.audio-active .ambient-bg {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+body.audio-active .editor-wrap {
+  border-color: rgba(91, 141, 239, calc(0.12 + var(--energy, 0) * 0.15));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+body.audio-active .pulse-dot {
+  animation-duration: 2.2s;
+}
+
 /* ── Focus proximité overlay ── */
 .proximity-focus {
   position: fixed;

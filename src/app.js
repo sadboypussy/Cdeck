@@ -557,7 +557,7 @@ export async function loadNote(id) {
 
 function setAudioStatus(silent) {
   const el = $("#audio-status");
-  el.textContent = silent ? "Silence" : "Réactif";
+  el.textContent = silent ? "En veille" : "À l'écoute";
   el.classList.toggle("is-live", !silent);
 }
 
