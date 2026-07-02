@@ -1,19 +1,23 @@
 :root {
-  --bg-deep: #06060c;
-  --bg-main: #0a0a12;
-  --bg-panel: rgba(13, 14, 21, 0.82);
-  --glass: rgba(255, 255, 255, 0.045);
-  --glass-strong: rgba(255, 255, 255, 0.09);
-  --glass-border: rgba(255, 255, 255, 0.09);
-  --glass-glow: rgba(121, 255, 225, 0.1);
+  --bg-deep: #07080d;
+  --bg-main: #0c0d14;
+  --bg-panel: rgba(14, 15, 22, 0.94);
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-raised: rgba(255, 255, 255, 0.05);
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-glow: rgba(91, 141, 239, 0.08);
 
-  --cyan: #79ffe1;
-  --cyan-dim: rgba(121, 255, 225, 0.5);
-  --pink: #ff3d7a;
-  --violet: #7c3aed;
-  --text: #eceef3;
-  --text-dim: #7d8296;
-  --text-faint: #4d5063;
+  --accent: #5b8def;
+  --accent-dim: rgba(91, 141, 239, 0.55);
+  --cyan: #5b8def;
+  --cyan-dim: rgba(91, 141, 239, 0.45);
+  --pink: #e879a8;
+  --violet: #7c6cf0;
+  --text: #e8eaef;
+  --text-dim: #8b90a0;
+  --text-faint: #555869;
 
   --display: "Sora", system-ui, sans-serif;
   --body: "Inter", system-ui, sans-serif;
@@ -58,8 +62,8 @@ body {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 45% at 50% -8%, rgba(124, 58, 237, 0.16), transparent),
-    radial-gradient(ellipse 55% 38% at 85% 95%, rgba(121, 255, 225, 0.07), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91, 141, 239, 0.07), transparent),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(124, 108, 240, 0.04), transparent),
     var(--bg-deep);
   pointer-events: none;
   z-index: 0;
@@ -78,12 +82,7 @@ body {
 }
 
 .device-noise {
-  position: absolute;
-  inset: 0;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 50;
+  display: none;
 }
 
 .device > *:not(.device-noise) {

@@ -27,12 +27,54 @@ pub fn vault_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?;
-    path.push("vault");
+    path.push("vault-writer");
     Ok(path)
 }
 
+fn migrate_legacy_vault(app_data: &Path, writer: &Path) -> Result<(), String> {
+    let legacy = app_data.join("vault");
+    if !legacy.is_dir() {
+        return Ok(());
+    }
+
+    let writer_has_notes = writer.is_dir()
+        && fs::read_dir(writer)
+            .map_err(|e| e.to_string())?
+            .filter_map(|e| e.ok())
+            .any(|e| {
+                e.path()
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    == Some("md")
+            });
+
+    if writer_has_notes {
+        return Ok(());
+    }
+
+    if !writer.exists() {
+        fs::create_dir_all(writer).map_err(|e| e.to_string())?;
+    }
+
+    for entry in fs::read_dir(&legacy).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) == Some("md") {
+            if let Some(name) = path.file_name() {
+                fs::copy(&path, writer.join(name)).map_err(|e| e.to_string())?;
+            }
+        }
+    }
+    Ok(())
+}
+
 pub fn ensure_vault(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let app_data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
     let vault = vault_path(app)?;
+    migrate_legacy_vault(&app_data, &vault)?;
     if !vault.exists() {
         fs::create_dir_all(&vault).map_err(|e| e.to_string())?;
         seed_vault(&vault)?;

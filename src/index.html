@@ -12,107 +12,98 @@
     />
     <link rel="stylesheet" href="styles/main.css" />
   </head>
-  <body>
+  <body class="posture-draft music-expanded">
     <div class="ambient-bg"></div>
 
     <div class="device" id="device">
-      <div class="device-noise" aria-hidden="true"></div>
-
       <header class="topbar">
         <div class="topbar-id">VISUAL-CORE <span>/ 77</span></div>
-        <div class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D debug audio">
+        <div class="topbar-status" id="reactivity-indicator" title="Ctrl+Shift+D · debug audio">
           <span class="pulse-dot"></span> LIVE
         </div>
-        <div class="topbar-clock" id="clock">--:--</div>
+        <span class="posture-badge" id="posture-badge" title="Tab · Navigate · Échap · Draft">Draft</span>
       </header>
 
-      <section class="audio-tier" id="audio-tier">
-        <canvas class="ambient-canvas" id="ambient-canvas" aria-hidden="true"></canvas>
-        <div class="video-shell">
-          <div class="scanner-frame crt-active">
-            <div id="yt-player" class="yt-player"></div>
-            <div class="video-fallback" id="video-fallback">
-              <div class="video-fallback-pulse" aria-hidden="true"></div>
-              <p class="video-fallback-title">Ambiance audio</p>
-              <p class="video-fallback-sub">Lance ta musique ailleurs (Spotify, navigateur…) — l'interface capte le <strong>son système</strong> via WASAPI.</p>
+      <main class="workzone" id="workzone">
+        <div class="note-surface">
+          <aside class="proximity-rail proximity-rail-left" id="proximity-rail-left" aria-label="Notes proches à gauche"></aside>
+
+          <div class="note-center">
+            <div class="editor-shell" id="editor-shell">
+              <div class="editor-wrap" id="editor-wrap">
+                <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
+                <textarea class="editor" id="editor" spellcheck="false" placeholder="# Nouvelle note…"></textarea>
+                <div class="read-view hidden" id="read-view" aria-label="Lecture"></div>
+                <ul class="wikilink-ac hidden" id="wikilink-ac" role="listbox"></ul>
+              </div>
+              <div class="notes-footer">
+                <div class="tags-bar" id="tags-bar"></div>
+                <div class="notes-actions">
+                  <button type="button" class="btn-ghost" id="btn-read-mode" title="Ctrl+E">Lire</button>
+                  <button type="button" class="btn-save" id="btn-save-note" disabled title="Ctrl+S">Enregistrer</button>
+                </div>
+              </div>
             </div>
-            <div class="scanner-overlay"></div>
-            <div class="frame-sheen" aria-hidden="true"></div>
-            <canvas class="crt-canvas" id="crt-canvas" aria-hidden="true"></canvas>
-            <div class="now-tag">NOW PLAYING</div>
+
+            <div class="proximity-ribbon hidden" id="proximity-ribbon" aria-label="Suggestions"></div>
           </div>
-        </div>
 
-        <div class="track-row">
-          <div class="track-title" id="track-title">En attente</div>
-          <div class="track-sub" id="track-sub">▶ pour lancer · ou musique système</div>
+          <aside class="proximity-rail proximity-rail-right" id="proximity-rail-right" aria-label="Notes proches à droite"></aside>
         </div>
+      </main>
 
+      <section class="music-band" id="music-band">
+        <div class="music-band-main">
+          <span class="music-icon" aria-hidden="true">♪</span>
+          <div class="track-marquee-wrap">
+            <div class="track-marquee" id="track-marquee">
+              <span id="track-title">Musique système · WASAPI</span>
+            </div>
+          </div>
+          <time class="music-clock" id="music-clock">--:--</time>
+        </div>
         <div class="audio-wave" id="audio-wave" aria-hidden="true"></div>
-
-        <div class="controls-row">
-          <button class="icon-btn" id="btn-prev" title="Précédent" type="button">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M6 5v14M18 5L8 12l10 7V5z" fill="currentColor" />
-            </svg>
-          </button>
-          <button class="icon-btn icon-btn-primary" id="btn-play" title="Play/Pause" type="button">
+        <div class="music-band-controls">
+          <select class="music-source" id="music-source" title="Source audio">
+            <option value="system">Système</option>
+            <option value="youtube">YouTube</option>
+          </select>
+          <button class="icon-btn icon-btn-sm hidden" id="btn-play" type="button" title="Play/Pause YouTube">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M7 4l13 8-13 8V4z" fill="currentColor" />
             </svg>
           </button>
-          <button class="icon-btn" id="btn-next" title="Suivant" type="button">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M18 5v14M6 5l10 7L6 19V5z" fill="currentColor" />
-            </svg>
-          </button>
-          <label class="volume">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-              <path d="M4 9v6h4l5 4V5L8 9H4z" />
-              <path d="M16 9a4 4 0 0 1 0 6" stroke-linecap="round" />
-            </svg>
+          <label class="volume volume-sm hidden" id="volume-wrap">
             <input type="range" id="volume" min="0" max="100" value="60" />
           </label>
+          <button class="icon-btn icon-btn-sm" id="btn-music-collapse" type="button" title="Replier la bande">▾</button>
         </div>
       </section>
 
-      <div class="tabs">
-        <div class="tabs-track" id="tabs-track">
-          <div class="tab-indicator" aria-hidden="true"></div>
-          <button class="tab active" data-tab="notes" id="tab-notes" type="button">Notes</button>
-          <button class="tab" data-tab="proximity" id="tab-proximity" type="button">Proximité</button>
-        </div>
-      </div>
-
-      <main class="workzone">
-        <div class="workzone-glitch" id="workzone-glitch" aria-hidden="true"></div>
-        <div class="panel panel-notes active" id="panel-notes">
-          <div class="editor-wrap">
-            <div class="editor-backdrop" id="editor-backdrop" aria-hidden="true"></div>
-            <textarea class="editor" id="editor" spellcheck="false" placeholder="# Nouvelle note…"></textarea>
-          </div>
-          <div class="notes-footer">
-            <div class="tags-bar" id="tags-bar"></div>
-            <button type="button" class="btn-save" id="btn-save-note" disabled title="Ctrl+S">
-              Enregistrer
-            </button>
-          </div>
-        </div>
-
-        <div class="panel panel-proximity" id="panel-proximity">
-          <div class="proximity-stage">
-            <aside class="proximity-fade proximity-fade-left" id="proximity-fade-left" aria-label="Suggestions gauche"></aside>
-            <div class="proximity-center" id="proximity-grid"></div>
-            <aside class="proximity-fade proximity-fade-right" id="proximity-fade-right" aria-label="Suggestions droite"></aside>
-          </div>
-          <p class="proximity-meta" id="proximity-meta"></p>
-        </div>
-      </main>
-
       <footer class="statusbar">
         <span id="cursor-pos">Ln 1, Col 1</span>
-        <span id="sync-status" class="status-ok">Synced · v0.2</span>
+        <span id="sync-status" class="status-ok">Synced</span>
       </footer>
+    </div>
+
+    <div class="proximity-focus hidden" id="proximity-focus" role="dialog" aria-label="Focus proximité">
+      <div class="proximity-focus-backdrop" id="proximity-focus-backdrop"></div>
+      <div class="proximity-focus-panel">
+        <header class="proximity-focus-header">
+          <span>Proximité</span>
+          <span class="proximity-focus-hint">Flèches · Entrée · Échap</span>
+        </header>
+        <div class="proximity-stage">
+          <aside class="proximity-fade proximity-fade-left" id="proximity-fade-left"></aside>
+          <div class="proximity-center" id="proximity-grid"></div>
+          <aside class="proximity-fade proximity-fade-right" id="proximity-fade-right"></aside>
+        </div>
+        <p class="proximity-meta" id="proximity-meta"></p>
+      </div>
+    </div>
+
+    <div class="yt-mount" id="yt-mount" aria-hidden="true">
+      <div id="yt-player"></div>
     </div>
 
     <div class="hud-overlay hidden" id="hud">

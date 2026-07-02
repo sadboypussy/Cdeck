@@ -29,9 +29,9 @@ Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), Web
 
 ---
 
-## État actuel du code (avant refonte V3)
+## État actuel du code (post-refonte V3 — juil. 2025)
 
-> L'UI reflète encore l'ancienne hiérarchie (zone vidéo 16:9 + onglets). La refonte layout/proximité est **à faire** — voir roadmap dans le pivot.
+> UI alignée sur **PIVOT V3.1** : workzone hero · bande musique bas · Draft/Navigate/Focus · read mode · autocomplete `[[` · vault `vault-writer/`
 
 ### Ce qui marche
 
@@ -39,11 +39,12 @@ Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), Web
 |------|--------|
 | **Notes** | Éditeur Markdown, wikilinks cliquables, tags, autosave 800 ms |
 | **Enregistrer** | Bouton pill + `Ctrl+S`, état Modifié / Enregistré |
-| **Proximité** | Grille **3×3** (onglet séparé — **à tisser en surface note**) |
-| **Périphériques** | Colonnes gauche/droite dans onglet Proximité |
+| **Proximité** | Rails + ribbon (Navigate) · focus `Ctrl+Shift+G` · Draft par défaut |
+| **Lecture** | Bouton Lire / `Ctrl+E` · rendu MD + wikilinks cliquables |
+| **Liens** | Autocomplete `[[` · chips raison sur rails |
 | **Moteur liens** | `get_galaxy` Rust : wikilink, backlink, tags, Jaccard mots |
 | **Audio** | WASAPI loopback → FFT → 6 bandes → `audio-bands` @ 60 Hz |
-| **UI audio** | rAF 60 fps, attaque rapide / release doux, waveform |
+| **UI audio** | Bande basse : titre défilant + horloge + waveform · source Système/YouTube |
 | **Fenêtre** | Maximize sur **moniteur #2** au démarrage (sinon #1) |
 | **Palette** | `Ctrl+P` recherche + création note |
 | **Debug audio** | `Ctrl+Shift+D` |
@@ -76,7 +77,7 @@ src-tauri/src/
 
 `list_notes` · `get_note` · `save_note` · `create_note` · `search_notes` · `get_vault_path` · **`get_galaxy`**
 
-Vault prod : `%APPDATA%/com.cyberdeck.app/vault/`
+Vault prod : `%APPDATA%/com.cyberdeck.app/vault-writer/` (migration auto depuis `vault/`)
 
 ---
 
@@ -139,20 +140,12 @@ Scoring :
 
 ---
 
-## Prochaine session — implémentation pivot
+## Prochaine session
 
-Ordre suggéré (détail dans pivot §9) :
-
-1. **Phase A** — Layout : bande ambiance basse repliable ; workzone hero ; YouTube menu source
-2. **Phase B** — Proximité tissée : rails + ribbon ; `Ctrl+Shift+G` focus grille ; retirer onglet
-3. **Phase C** — Feel notes : autocomplete `[[` ; mode lecture ; chips raison
-4. **Phase D** — Menu sources extensible (Spotify backlog)
-
-Autres :
-
-- Moniteur : préférence utilisateur vs index fixe
-- Plus de notes seed pour tester overflow proximité
-- README / PDD historique : ne pas supprimer — pointer vers pivot
+1. Test usage réel (2 h écriture · musique Spotify)
+2. Calibrage INT audio · polish typo
+3. Moniteur : préférence écran
+4. V3.2 : fullscreen écran principal
 
 ---
 

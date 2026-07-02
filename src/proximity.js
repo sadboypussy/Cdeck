@@ -1,4 +1,4 @@
-/** Grille 3×3 + suggestions périphériques translucides. */
+/** Proximité — rails, ribbon, grille focus 3×3. */
 
 function escapeHtml(text) {
   return String(text)
@@ -21,6 +21,44 @@ function splitSides(nodes) {
   return { left, right };
 }
 
+function renderRailColumn(el, nodes, side, onSelect) {
+  el.innerHTML = "";
+  if (!nodes.length) {
+    el.classList.remove("has-chips");
+    return;
+  }
+  el.classList.add("has-chips");
+  nodes.slice(0, 3).forEach((node) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = `proximity-rail-chip proximity-rail-${side}`;
+    const reason = node.reasons?.[0] ?? "";
+    chip.innerHTML = `
+      <span class="proximity-rail-chip-title">${escapeHtml(node.title)}</span>
+      ${reason ? `<span class="proximity-rail-chip-reason">${escapeHtml(reason)}</span>` : ""}`;
+    chip.addEventListener("click", () => onSelect?.(node.id));
+    el.appendChild(chip);
+  });
+}
+
+function renderRibbon(el, nodes, onSelect) {
+  el.innerHTML = "";
+  if (!nodes.length) {
+    el.classList.add("hidden");
+    return;
+  }
+  el.classList.remove("hidden");
+  nodes.slice(0, 8).forEach((node) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "proximity-ribbon-chip";
+    const reason = node.reasons?.[0] ?? "";
+    chip.innerHTML = `${escapeHtml(node.title)}${reason ? `<em>${escapeHtml(reason)}</em>` : ""}`;
+    chip.addEventListener("click", () => onSelect?.(node.id));
+    el.appendChild(chip);
+  });
+}
+
 function renderFadeColumn(el, nodes, side, onSelect) {
   el.innerHTML = "";
   el.classList.toggle("has-chips", nodes.length > 0);
@@ -39,7 +77,16 @@ function renderFadeColumn(el, nodes, side, onSelect) {
   });
 }
 
-export function createProximityGrid(gridContainer, fadeLeft, fadeRight, { onSelect, onCenterClick }) {
+export function createProximityUI({
+  railLeft,
+  railRight,
+  ribbon,
+  gridContainer,
+  fadeLeft,
+  fadeRight,
+  onSelect,
+  onCenterClick,
+}) {
   const grid = document.createElement("div");
   grid.className = "proximity-grid";
   grid.setAttribute("role", "grid");
@@ -60,6 +107,7 @@ export function createProximityGrid(gridContainer, fadeLeft, fadeRight, { onSele
   let centerId = null;
   let slotIds = Array(8).fill(null);
   let focusIndex = 4;
+  let lastView = null;
 
   function setFocus(i) {
     if (i < 0 || i > 8 || cells[i].disabled) return;
@@ -84,7 +132,7 @@ export function createProximityGrid(gridContainer, fadeLeft, fadeRight, { onSele
     if (id) onSelect?.(id);
   }
 
-  function render(view) {
+  function renderGrid(view) {
     centerId = view.center_id;
     const gridNodes = (view.nodes ?? []).slice(0, 8);
     let peripheral = (view.peripheral ?? []).slice(0, 8);
@@ -131,6 +179,26 @@ export function createProximityGrid(gridContainer, fadeLeft, fadeRight, { onSele
     setFocus(4);
   }
 
+  function render(view) {
+    lastView = view;
+    const gridNodes = (view.nodes ?? []).slice(0, 8);
+    let peripheral = (view.peripheral ?? []).slice(0, 8);
+    if (!peripheral.length && gridNodes.length > 4) {
+      peripheral = gridNodes.slice(4).map((n) => ({ ...n }));
+    }
+
+    const { left, right } = splitSides(gridNodes);
+    renderRailColumn(railLeft, left, "left", onSelect);
+    renderRailColumn(railRight, right, "right", onSelect);
+
+    const ribbonNodes = [
+      ...gridNodes.slice(6),
+      ...peripheral.filter((p) => !gridNodes.some((g) => g.id === p.id)),
+    ];
+    renderRibbon(ribbon, ribbonNodes, onSelect);
+    renderGrid(view);
+  }
+
   cells.forEach((cell, i) => {
     cell.addEventListener("click", () => activateCell(i));
     cell.addEventListener("mouseenter", () => {
@@ -159,5 +227,5 @@ export function createProximityGrid(gridContainer, fadeLeft, fadeRight, { onSele
     return false;
   }
 
-  return { render, handleKey };
+  return { render, handleKey, getLastView: () => lastView };
 }

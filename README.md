@@ -58,13 +58,14 @@ notes/              Référence vault (prod dans AppData)
 
 ## État actuel (code)
 
-| Livré | Cible V3 (pivot) |
-|-------|------------------|
-| Éditeur Markdown + wikilinks + autosave | + autocomplete `[[` · mode lecture |
-| Onglets Notes / Proximité | Proximité **continue** (rails + ribbon) |
-| Grille 3×3 + moteur `get_galaxy` | Focus mode `Ctrl+Shift+G` |
-| Zone vidéo 16:9 + YouTube lazy | Bande ambiance repliable · sources menu |
-| WASAPI → effets texte (liens, transitions) | Priorité texte >> chrome vidéo |
+| Livré V3 | Détail |
+|----------|--------|
+| Layout notes-first | Workzone hero · bande musique bas · UI clean |
+| Draft / Navigate / Focus | Idle 4 s · Tab · `Ctrl+Shift+G` · Échap |
+| Proximité tissée | Rails + ribbon + chips raison · grille focus |
+| Notes | Autocomplete `[[` · Lire `Ctrl+E` · autosave 800 ms + flush visibility |
+| Audio | WASAPI · waveform · titre défilant · source Système/YouTube |
+| Vault | `vault-writer/` · migration depuis `vault/` |
 
 ### Moteur proximité
 
