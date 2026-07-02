@@ -1,161 +1,94 @@
 # REPRISE — VISUAL-CORE-77 (Cyber-Deck)
 
-> Doc de handoff — mis à jour juil. 2025 · Branche : `master` · repo `sadboypussy/Cdeck`
+> Handoff technique · juil. 2025 · `master` · https://github.com/sadboypussy/Cdeck
 
-## Direction produit actuelle
+**Reprise complète session :** [`HANDOFF — Juil 2025.md`](HANDOFF%20—%20Juil%202025.md) ← **lire en premier sur autre PC**
 
-**Lire en priorité :** [`PIVOT V3.1 — Framing acté.md`](PIVOT%20V3.1%20—%20Framing%20acté.md) · contexte : [`PIVOT V3 — Notes First.md`](PIVOT%20V3%20—%20Notes%20First.md)
-
-Framing V3.1 : **VISUAL-CORE-77** (Writer Space) ship first · vault séparé · esthétique **clean** · bande musique titre+waveform (pas thumbnail) · Draft/Navigate proximité · fullscreen primary plus tard · **SYNTAX-CORE** coder en V4.
-
-Chaîne de valeur :
-
-```
-Musique → Ambiance → Concentration → Pensée → Navigation
-```
+**Vérité produit :** [`PIVOT V3.1 — Framing acté.md`](PIVOT%20V3.1%20—%20Framing%20acté.md)
 
 ---
 
-## Démarrage sur un autre PC
+## Démarrage autre PC
 
 ```bash
 git clone https://github.com/sadboypussy/Cdeck.git
 cd Cdeck
 npm install
-npm run dev          # ou double-clic Dev Cyber-Deck.bat (Windows)
+npm run dev
 ```
 
-Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), WebView2.
+Prérequis : Node.js · Rust · VS Build Tools · WebView2 · Windows
+
+Musique : lance **Spotify / navigateur** sur le PC — l'app capte le son (WASAPI). Pas de lecteur dans l'app.
 
 ---
 
-## État actuel du code (post-refonte V3 — juil. 2025)
+## Identité (une phrase)
 
-> UI alignée sur **PIVOT V3.1** : workzone hero · bande musique bas · Draft/Navigate/Focus · read mode · autocomplete `[[` · vault `vault-writer/`
+Snappy, musical, connected — surface d'écriture audio-réactive, pas Notepad, pas un player.
 
-### Ce qui marche
+---
+
+## État code (juil. 2025 — post-V3)
+
+### Livré
 
 | Zone | Détail |
 |------|--------|
-| **Notes** | Éditeur Markdown, wikilinks cliquables, tags, autosave 800 ms |
-| **Enregistrer** | Bouton pill + `Ctrl+S`, état Modifié / Enregistré |
-| **Proximité** | Rails + ribbon (Navigate) · focus `Ctrl+Shift+G` · Draft par défaut |
-| **Lecture** | Bouton Lire / `Ctrl+E` · rendu MD + wikilinks cliquables |
-| **Liens** | Autocomplete `[[` · chips raison sur rails |
-| **Moteur liens** | `get_galaxy` Rust : wikilink, backlink, tags, Jaccard mots |
-| **Audio** | WASAPI loopback → FFT → 6 bandes → `audio-bands` @ 60 Hz |
-| **UI audio** | Bande : Réactif/Silence + waveform + horloge · pas lecteur |
-| **Fenêtre** | Maximize sur **moniteur #2** au démarrage (sinon #1) |
-| **Palette** | `Ctrl+P` recherche + création note |
-| **Debug audio** | `Ctrl+Shift+D` |
+| **Layout** | Workzone hero · bande basse · UI clean |
+| **Notes** | MD · wikilinks · tags · autosave 800 ms · flush si onglet caché |
+| **Proximité** | Draft (défaut) · Navigate (idle 4s / Tab) · Focus (`Ctrl+Shift+G`) |
+| **Liens** | Autocomplete `[[` · rails + ribbon · chips raison |
+| **Lecture** | `Ctrl+E` / bouton Lire |
+| **Audio** | WASAPI · waveform · **En veille / À l'écoute** · diégétique silence/actif |
+| **Vault** | `vault-writer/` · migration `vault/` · 6 seeds · backfill manquants |
+| **Palette** | `Ctrl+P` |
 
-### Lancer correctement
+### Retiré (décision actée)
 
-**Ne pas** ouvrir `index.html` seul — il faut **Tauri** (`npm run dev`).
-
-L'audio-réactif capte le **son système** (Spotify, navigateur…) — pas de lecteur intégré, pas de titre affiché.
+- Zone vidéo 16:9 · YouTube · titres de piste · menu source · onglets Notes/Proximité
 
 ---
 
-## Architecture fichiers clés
+## Architecture
 
 ```
 src/
-  app.js              UI, tabs, save, player, HUD, proximité
-  proximity.js        Grille 3×3 + chips périphériques (→ focus mode V3)
-  audio-reactive.js   rAF, lissage asymétrique, bridge WASAPI
-  tauri-shim.js       invoke/listen sans bundler npm
-  ambient.js / crt.js Effets zone vidéo (→ atmosphere globale V3)
+  app.js              UI · postures · save · HUD · read mode
+  proximity.js        Rails · ribbon · grille 3×3 focus
+  audio-reactive.js   rAF · WASAPI · --energy / --bass-glow
+  styles/pivot-v3.css Layout V3 · diégétique audio-silent / audio-active
+  space.js            Hook Writer (SYNTAX-CORE = V4+)
 src-tauri/src/
-  galaxy.rs           Scoring proximité (core 8 + peripheral 8)
-  window.rs           Placement 2ᵉ écran + maximize
-  audio/              WASAPI loopback + FFT + emit
-  notes.rs            Vault AppData, seed 5 notes
+  notes.rs            vault-writer · seeds · ensure_seed_notes
+  galaxy.rs           get_galaxy scoring
+  audio/              WASAPI loopback
 ```
 
-### Commandes Tauri exposées
-
-`list_notes` · `get_note` · `save_note` · `create_note` · `search_notes` · `get_vault_path` · **`get_galaxy`**
-
-Vault prod : `%APPDATA%/com.cyberdeck.app/vault-writer/` (migration auto depuis `vault/`)
+Vault : `%APPDATA%/com.cyberdeck.app/vault-writer/`
 
 ---
 
-## Moteur proximité (`galaxy.rs`)
+## Raccourcis
 
-Scoring :
-
-- `lien →` : 1.0 · `← backlink` : 0.72 · tags : jusqu'à 0.42 · thème Jaccard : ~0.38
-- `MIN_CORE_SCORE` 0.08 · `MIN_PERIPHERAL_SCORE` 0.02
-
-**V3 :** exposer les `reasons` en rails/ribbon permanent, pas seulement dans la grille.
+`Ctrl+P` · `Ctrl+S` · `Ctrl+E` · `Tab` (Navigate) · `Ctrl+Shift+G` (Focus) · `Ctrl+Shift+D` (debug) · `Escape`
 
 ---
 
-## Audio — calibrage actuel
+## Commits session (référence)
 
-**Rust** (`audio/mod.rs`) : emit 16 ms, `smooth_bands_asymmetric` attack 0.78 / release 0.32.
-
-**JS** (`audio-reactive.js`) : `requestAnimationFrame`. Intensité défaut ~60 % (`Ctrl+Shift+D`).
-
-**V3 :** prioriser effets sur **texte** (titres, wikilinks, transitions note) vs chrome vidéo.
+`8f36e0c` docs pivot · `fc26b8a` framing V3.1 · `e9073b4` impl UI V3 · `c813f37` audio-réactif pur · `5db1390` diégétique + seeds
 
 ---
 
-## Fenêtre second écran
+## Prochaine étape
 
-`src-tauri/src/window.rs` → moniteur index **1** (2ᵉ écran), puis `maximize()`.
-
-`tauri.conf.json` : fenêtre redimensionnable, UI stretch 100 %.
-
----
-
-## Bugs connus / bruit
-
-| Symptôme | Cause | Action |
-|----------|-------|--------|
-| `Tracking Prevention blocked storage` | WebView2 + YouTube | Ignorer (cosmétique) |
-| YouTube erreur 150 | Embed interdit | WASAPI suffit ; embed = addon |
-| Peu de voisins en grille | Vault petit (5 notes seed) | Ajouter notes + `[[liens]]` |
-| UI « lecteur first » | Layout pré-pivot | Refonte Phase A (pivot doc) |
-
----
-
-## Non commité volontairement
-
-- `visual-core-v2 claude remanié.html` — mockup référence UI V2
-- `src/vendor/three/` — legacy radar WebGL (retiré UI)
-
----
-
-## Traçabilité docs
-
-| Doc | Version | Rôle |
-|-----|---------|------|
-| `PDD Cyber-Deck V2.md` | V1.1 (juin 2025) | Superdocument historique · technique · principes musicaux |
-| **`PIVOT V3.1 — Framing acté.md`** | **V3.1 (juil. 2025)** | **Framing verrouillé — Spaces, UI, proximité** |
-| **`PIVOT V3 — Notes First.md`** | V3.0 (juil. 2025) | Pivot direction · roadmap |
-| `REPRISE.md` | ce fichier | Handoff dev |
-| `.cursor/rules/cyber-deck-pdd-core.mdc` | V3 | Règle agent Cursor |
-
----
-
-## Prochaine session
-
-1. Test usage réel (2 h écriture · musique Spotify)
-2. Calibrage INT audio · polish typo
-3. Moniteur : préférence écran
-4. V3.2 : fullscreen écran principal
-
----
-
-## Commandes utiles
+1. **Test réel** 2 h (toi) — valider le « whoah »
+2. Polish audio / typo / transitions (agent)
+3. V3.2 fullscreen primary (plus tard)
 
 ```bash
-npm run dev              # hot reload
-npm run test:audio       # spike WASAPI CLI
+npm run dev
+npm run test:audio
 cargo check -p cyber-deck --manifest-path src-tauri/Cargo.toml
 ```
-
-Raccourcis in-app : `Ctrl+P` · `Ctrl+S` · `Escape` (HUD) · `Ctrl+Shift+D` (VU)  
-**V3 prévu :** `Ctrl+Shift+G` (focus proximité)

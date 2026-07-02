@@ -6,8 +6,7 @@ Nom affiché : **VISUAL-CORE-77** · codename / repo : `Cdeck` / `cyber-deck`
 
 Stack : **Tauri 2** (Rust + vanilla JS, sans bundler) · Windows 10/11 · portrait compagnon (redimensionnable).
 
-> **Framing acté (V3.1) :** [`PIVOT V3.1 — Framing acté.md`](PIVOT%20V3.1%20—%20Framing%20acté.md)  
-> **VISUAL-CORE-77** = Writer Space (ship first) · **SYNTAX-CORE** = Coder (V4+) · vaults séparés · UI clean · musique = sang de l'app.
+> **Handoff session :** [`HANDOFF — Juil 2025.md`](HANDOFF%20—%20Juil%202025.md)
 
 ## Pitch
 
@@ -91,9 +90,10 @@ Vault seed : ouvrir `PROTOCOLE_REINITIALISATION`.
 
 | Fichier | Contenu |
 |---------|---------|
-| **`PIVOT V3 — Notes First.md`** | Direction actuelle · roadmap refonte |
-| `PDD Cyber-Deck V2.md` | Historique V1.1 · technique · principes musicaux |
-| `REPRISE.md` | Handoff développeur · état session |
+| **`HANDOFF — Juil 2025.md`** | **Reprise autre PC — commits, décisions, état** |
+| **`PIVOT V3.1 — Framing acté.md`** | Vérité produit |
+| `PIVOT V3 — Notes First.md` | Contexte pivot |
+| `REPRISE.md` | Technique court |
 
 ## Développement
 
