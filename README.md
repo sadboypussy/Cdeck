@@ -1,10 +1,21 @@
 # VISUAL-CORE-77
 
-Compagnon de concentration pour second écran — notes Zettelkasten + ambiance musicale + réactivité audio WASAPI.
+**Surface de pensée musicale** pour second écran — notes Zettelkasten locales, navigation par proximité intelligente, ambiance calée sur le **son système** (WASAPI).
 
-Nom affiché : **VISUAL-CORE-77** · codename projet / repo : `cyber-deck`
+Nom affiché : **VISUAL-CORE-77** · codename / repo : `Cdeck` / `cyber-deck`
 
-Stack : **Tauri 2** (Rust + vanilla JS, sans bundler) · Windows 10/11 · fenêtre portrait **405×720** (9:16).
+Stack : **Tauri 2** (Rust + vanilla JS, sans bundler) · Windows 10/11 · portrait compagnon (redimensionnable).
+
+> **Direction produit (V3) :** [`PIVOT V3 — Notes First.md`](PIVOT%20V3%20—%20Notes%20First.md)  
+> Notes + navigation clever = cœur · musique = atmosphere · YouTube / plateformes = addon optionnel.
+
+## Pitch
+
+```
+Musique → Ambiance → Concentration → Pensée → Navigation
+```
+
+Pas un lecteur avec des notes. Une **pièce** où le texte respire avec la musique — et où le vault **se trie tout seul** (liens, backlinks, tags, thèmes).
 
 ## Démarrage
 
@@ -19,7 +30,7 @@ npm run launch       # menu PowerShell
 npm run test:audio   # spike WASAPI seul
 ```
 
-> YouTube se charge **au clic sur ▶** (lazy). L'audio-réactif fonctionne via **WASAPI loopback** dès que de la musique joue sur le système — même sans vidéo embed.
+> L'audio-réactif fonctionne via **WASAPI loopback** dès qu'une musique joue sur le système — Spotify, navigateur, etc. **Sans embed obligatoire.**
 
 ### Launcher (Windows)
 
@@ -29,73 +40,63 @@ npm run test:audio   # spike WASAPI seul
 | `Dev Cyber-Deck.bat` | Lance directement le mode dev |
 | `launch.ps1 dev` | Idem en ligne de commande |
 
-Options menu : **DEV** · **RELEASE** · **DEBUG EXE** · **AUDIO SPIKE** · **BUILD**
-
 ## Structure
 
 ```
 src/
-  app.js            UI principale (notes, liens, player, HUD)
-  tauri-shim.js     Bridge invoke/listen via window.__TAURI__ (pas de bundler)
-  audio-reactive.js Bandes audio + simulation fallback
-  ambient.js        Particules zone audio
-  crt.js            Overlay CRT léger sur la zone vidéo
-  vendor/           Three.js local (legacy, radar WebGL retiré de l'UI)
+  app.js            UI principale (notes, player, HUD, proximité)
+  proximity.js      Grille 3×3 + périphériques (→ focus mode V3)
+  tauri-shim.js     Bridge invoke/listen (pas de bundler)
+  audio-reactive.js Bandes audio + lissage rAF
+  ambient.js        Particules ambiance
+  crt.js            Overlay CRT (zone vidéo — à relocaliser V3)
   styles/           tokens, glass, components, effects
-src-tauri/          Backend Tauri (vault notes, capture WASAPI)
-audio-spike/        Branche B — spike CLI WASAPI loopback + FFT
-notes/              Référence vault (notes prod dans AppData)
+src-tauri/          Vault notes, get_galaxy, capture WASAPI
+audio-spike/        Spike CLI WASAPI + FFT
+notes/              Référence vault (prod dans AppData)
 ```
 
-## UI — livré
+## État actuel (code)
 
-- Fenêtre **405×720** plein écran portrait, UI edge-to-edge (Sora + Inter)
-- Zone vidéo **16:9** · placeholder ambiance · YouTube optionnel (▶)
-- Éditeur Markdown + autosave + surlignage `[[wikilinks]]`
-- Toggle **Notes / Liens** (graphe de proximité en cartes lisibles, max 4)
-- Palette **Ctrl+P** : recherche + création de note
-- Waveform · particules · CRT subtil · debug audio `Ctrl+Shift+D`
+| Livré | Cible V3 (pivot) |
+|-------|------------------|
+| Éditeur Markdown + wikilinks + autosave | + autocomplete `[[` · mode lecture |
+| Onglets Notes / Proximité | Proximité **continue** (rails + ribbon) |
+| Grille 3×3 + moteur `get_galaxy` | Focus mode `Ctrl+Shift+G` |
+| Zone vidéo 16:9 + YouTube lazy | Bande ambiance repliable · sources menu |
+| WASAPI → effets texte (liens, transitions) | Priorité texte >> chrome vidéo |
 
-### Onglet Liens (ex-radar)
+### Moteur proximité
 
-Affiche les notes **connectées** à celle que tu édites via les liens `[[NomNote]]` dans le texte.
+Rust `get_galaxy` score les voisins avec raisons explicites :
 
-1. Ouvre une note seed, ex. `PROTOCOLE_REINITIALISATION`
-2. Onglet **Liens**
-3. Clique une carte voisine → la note s'ouvre
+- `lien →` · `← backlink` · tags partagés · thème commun (Jaccard)
 
-Sans `[[wikilinks]]` vers des notes existantes, l'état vide est normal — ajoute par ex. `[[WASAPI]]` dans le texte.
+### Créer / naviguer
 
-### Créer une note
+1. `Ctrl+P` → identifiant (`Ma_Idee`) → **Créer**
+2. Écrire avec `[[Autre_Note]]` et `#tags`
+3. Onglet **Proximité** (temporaire) ou bientôt rails latéraux
 
-1. `Ctrl+P` → identifiant (`Ma_Idee`)
-2. **Créer « … »** → la note s'ouvre
-3. Ajoute `[[Autre_Note]]` → onglet **Liens** se met à jour à la sauvegarde
+Vault seed : ouvrir `PROTOCOLE_REINITIALISATION`.
 
 ## Audio
 
-- **WASAPI loopback** (Rust) : capture le mix système → FFT → 6 bandes → `emit("audio-bands")`
-- Frontend : simulation toujours active ; remplacée par Rust quand l'énergie est détectée
-- Reconnexion auto · surveillance changement périphérique (poll 1.5 s)
-- Lissage silence · filtre pollution · amplitude visuelle ~3 % (PDD)
+- **WASAPI loopback** : mix système → FFT → 6 bandes → `emit("audio-bands")`
+- Effets **musicaux** (~3 % amplitude) : titres, wikilinks, transitions note
+- Debug : `Ctrl+Shift+D`
 
-### Console « Tracking Prevention »
+YouTube intégré = confort zero-setup, **pas requis**. Erreur embed 150 → ignorer, WASAPI suffit.
 
-Messages Edge/WebView2 quand YouTube tente des cookies — **sans impact** sur WASAPI. Réduits en chargeant YouTube uniquement au clic ▶.
+## Documentation
 
-### Erreur YouTube 150
-
-Le propriétaire de la vidéo interdit l'embed. Le placeholder reste affiché ; **l'audio système suffit** pour la réactivité visuelle.
+| Fichier | Contenu |
+|---------|---------|
+| **`PIVOT V3 — Notes First.md`** | Direction actuelle · roadmap refonte |
+| `PDD Cyber-Deck V2.md` | Historique V1.1 · technique · principes musicaux |
+| `REPRISE.md` | Handoff développeur · état session |
 
 ## Développement
 
-- API Tauri : `src/tauri-shim.js` (obligatoire sans Vite/Webpack)
-- Pas d'import `@tauri-apps/api/...` direct dans le frontend servi depuis `src/`
-
-## Prochaine étape
-
-1. Affinage seuils audio en usage réel
-2. Source YouTube configurable (URL / playlist embeddable)
-3. Raccourci global Ctrl+P hors focus (optionnel)
-
-Voir `PDD Cyber-Deck V2.md` pour la vision produit (codename Cyber-Deck).
+- API Tauri : `src/tauri-shim.js` (obligatoire sans bundler)
+- Pas d'import `@tauri-apps/api/...` direct dans le frontend

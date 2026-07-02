@@ -1,7 +1,7 @@
 **\# Product Design Document — Cyber-Deck de Productivité**
 
-**\*\*Statut :\*\*** Superdocument révisé — fusion PDD V1 \+ Annexe A \+ principes musicaux \+ synthèse des revues croisées    
-**\*\*Version :\*\*** 1.1 (superdocument)    
+**\*\*Statut :\*\*** Superdocument révisé — fusion PDD V1 \+ Annexe A \+ principes musicaux \+ synthèse des revues croisées · **direction actuelle V3 → voir `PIVOT V3 — Notes First.md`**    
+**\*\*Version :\*\*** 1.1 (superdocument) · pivot produit **V3.0** documenté à part (juil. 2025)    
 **\*\*Date de fusion :\*\*** 30 juin 2025    
 **\*\*Stack cible :\*\*** Tauri (Rust \+ Web) — Windows 10/11 uniquement (V1)    
 **\*\*Format :\*\*** Portrait fixe 9:16  
@@ -25,7 +25,8 @@
 13\. \[Plan de développement — spike en deux branches\](\#13-plan-de-développement--spike-en-deux-branches)  
 14\. \[Revues croisées & synthèse des décisions\](\#14-revues-croisées--synthèse-des-décisions)  
 15\. \[Référence mockup UI\](\#15-référence-mockup-ui)  
-16\. \[Historique des révisions & traçabilité\](\#16-historique-des-révisions--traçabilité)
+16\. \[Historique des révisions & traçabilité\](\#16-historique-des-révisions--traçabilité)  
+17\. \[Pivot V3 — Notes First\](\#17-pivot-v3--notes-first-juillet-2025)
 
 **\---**
 
@@ -732,7 +733,8 @@ Une fois A et B validées indépendamment :
 | Revue ChatGPT | — | Repositionnement produit, principes musical, rejet Alt+Espace, radar \= différenciant |  
 | Revue Gemini | — | Mockup interactif, MOCK\_DB, Ctrl+P, tags, radar dynamique |  
 | Revue Claude | — | Faisabilité, filtrage Gemini, scores, budget temps |  
-| \*\*Superdocument V1.1\*\* | 30 juin 2025 | \*\*Fusion intégrale\*\* : amendements A intégrés dans corps du document ; §2–3 ajoutés ; §14 synthèse revues ; traçabilité rejets et anciennes décisions |
+| \*\*Superdocument V1.1\*\* | 30 juin 2025 | \*\*Fusion intégrale\*\* : amendements A intégrés dans corps du document ; §2–3 ajoutés ; §14 synthèse revues ; traçabilité rejets et anciennes décisions |  
+| \*\*PIVOT V3 Notes First\*\* | 2 juil. 2025 | Document séparé `PIVOT V3 — Notes First.md` : notes hero · musique atmosphere · proximité continue · YouTube/plateformes addon · traçabilité évolution ; §17 ci-dessous |
 
 \#\#\# 16.1 Mapping fusion Annexe A → sections principales
 
@@ -794,5 +796,45 @@ Une fois A et B validées indépendamment :
 
 \---
 
-\*Fin du superdocument — Cyber-Deck PDD V1.1\*
+\---
+
+\#\# 17\. Pivot V3 — Notes First (juillet 2025)
+
+\> \*\*Document canonique du pivot :\*\* \`PIVOT V3 — Notes First.md\` — cette section résume la traçabilité ; le détail UX/roadmap vit dans ce fichier.
+
+\#\#\# 17.1 Pourquoi une V3 alors que V1.1 disait déjà « notes = principal » ?
+
+Le superdocument V1.1 avait le **bon pitch** (compagnon de concentration, chaîne Musique → … → Navigation) mais l'**implémentation UI** restait structurée comme un deck vidéo : zone 16:9 hero, onglets Notes | Proximité, YouTube visible par défaut.
+
+Session pivot juil. 2025 : aligner **layout, hiérarchie visuelle et navigation** sur l'intention déjà écrite au §2.
+
+\#\#\# 17.2 Décisions actées (résumé)
+
+| Domaine | V1.1 (doc / impl.) | V3 (cible) |
+|---------|-------------------|------------|
+| Hiérarchie | Audio tier large \+ workzone | **Notes ~75–85 %** · bande ambiance repliable |
+| Musique | YouTube \+ WASAPI | **WASAPI = vérité** · sources menu (YT option · plateformes backlog) · pochette toggle |
+| Proximité | Onglet / toggle Radar | **Continue** (rails \+ ribbon) \+ focus \`Ctrl+Shift+G\` (grille 3×3) |
+| Feel notes | Textarea \+ backdrop | Autocomplete \`\[\[\` · mode lecture · chips raison partout |
+| Différenciation | Radar vivant (abandonné UI) | Proximité **explicable** tissée à l'écriture |
+
+\#\#\# 17.3 Ce qui est préservé du V1.1
+
+- Chaîne de valeur et principes **musical** vs audio-reactive (§3)  
+- \`get_galaxy\` / scoring Rust explicable  
+- WASAPI \+ agrégation bandes · rejets yt-dlp, cpal, graphe global  
+- Budget 80/20 navigation \+ subtilité >> cyberpunk décoratif  
+- Ctrl+P · vault local · Windows/Tauri
+
+\#\#\# 17.4 Décision UX — « mid-sentence, que montrer ? »
+
+Question laissée ouverte en session design. **Décision retenue pour V3 :** combinaison **rails latéraux** (top 2–3 voisins \+ raison) \+ **ribbon bas** collapsible (overflow) \+ **autocomplete \`\[\[\`** \+ **focus proximité** plein écran ponctuel — pas de popup intrusive.
+
+\#\#\# 17.5 Roadmap implémentation
+
+Voir \`PIVOT V3 — Notes First.md\` §9 : Phase A layout → B proximité tissée → C feel notes → D sources musique.
+
+\---
+
+\*Fin du superdocument — Cyber-Deck PDD V1.1 \+ trace pivot V3 §17\*
 

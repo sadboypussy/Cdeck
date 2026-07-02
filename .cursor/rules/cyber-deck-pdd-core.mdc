@@ -1,32 +1,46 @@
 ---
-description: Vérité produit Cyber-Deck — vision, scope V1, rejets explicites du PDD
+description: Vérité produit Cyber-Deck V3 — Notes First, scope, rejets, pivot
 alwaysApply: true
 ---
 
-# Cyber-Deck — PDD V1.1 (vérité produit)
+# Cyber-Deck — PIVOT V3 Notes First (vérité produit)
 
-**Pitch** : compagnon de concentration second écran — espace de réflexion qui respire avec la musique. Pas un lecteur + notes + graphe.
+**Pitch :** surface de pensée musicale pour second écran — écrire, lire, naviguer entre idées. La musique imprègne l'espace ; ce n'est pas un lecteur avec des notes.
 
-**Chaîne de valeur** : Musique → Ambiance → Concentration → Pensée → Navigation.
+**Chaîne de valeur :** Musique → Ambiance → Concentration → Pensée → Navigation.
 
-## V1 inclus
-- Tauri, portrait 9:16 fixe (~380×780), Windows only
-- YouTube IFrame API (pas yt-dlp / extraction)
-- Éditeur Markdown minimal + `[[wikilinks]]` + vault fichiers locaux
-- Graphe **proximité** uniquement : note active + voisins 1er degré (max 4 affichés)
-- Toggle Notes / Radar (pas les deux simultanément)
-- Capture audio WASAPI loopback + bandes agrégées Rust → `emit` Tauri
-- Ctrl+P palette recherche notes · Escape ferme HUD · tags sous la note
+**Doc pivot :** `PIVOT V3 — Notes First.md` · historique : `PDD Cyber-Deck V2.md` · handoff : `REPRISE.md`
 
-## Rejets V1 (ne pas réintroduire)
-- `Alt+Espace`, halo focus deck, badges raccourcis permanents
-- Vumètre permanent en UI principale (debug/settings seulement)
-- Labels radar toujours visibles (hover/clic)
-- Graphe global, layout 16:9, widgets RSS/todo/monitor
+## Hiérarchie produit (V3)
+
+1. **Notes** — écriture/lecture hero (~75–85 % écran) · feel typographique · confiance (raisons visibles)
+2. **Proximité continue** — rails latéraux + ribbon · `get_galaxy` · focus grille `Ctrl+Shift+G` · **pas** d'onglet égal Notes/Proximité
+3. **Musique atmosphere** — WASAPI loopback = source de vérité réactive · bande compacte repliable
+4. **Sources addon** — YouTube IFrame optionnel (menu) · à terme comptes plateformes · pochette/vignette **toggle**, jamais toujours affichée
+
+## Inclus V3 (cible refonte)
+
+- Tauri, portrait compagnon, Windows only
+- Éditeur Markdown + `[[wikilinks]]` + autocomplete · mode lecture · vault local
+- `get_galaxy` Rust — scoring explicable tissé dans l'UI (rails, ribbon, chips raison)
+- WASAPI loopback + bandes agrégées Rust → `emit` Tauri
+- Effets **musicaux** sur texte/navigation (~3 %), pas visualiseur hero
+- Ctrl+P palette · autosave · Ctrl+S
+
+## Rejets (ne pas réintroduire)
+
+- Hero UI 16:9 vidéo permanent · onglets Notes | Proximité comme modes égaux
+- yt-dlp / extraction non officielle
+- Graphe global, layout 16:9 principal, widgets RSS/todo/monitor
+- Vumètre permanent en prod UI (debug/settings seulement)
+- Alt+Espace, badges raccourcis permanents, labels radar permanents
 - cpal pour loopback (utiliser crate `wasapi`)
 - Spectre FFT brut via IPC (agrégation 4–8 floats côté Rust obligatoire)
 
 ## Budget polish (80/20)
-80 % navigation idées + subtilité musicale · 20 % esthétique cyberpunk décorative.
 
-Référence complète : `PDD Cyber-Deck V2.md`.
+80 % feel notes + navigation proximité + subtilité musicale sur texte · 20 % esthétique cyberpunk décorative.
+
+## Implémentation actuelle vs cible
+
+Le code peut encore refléter l'ancien layout (audio-tier 16:9, onglets). **Ne pas étendre** ce pattern — aligner sur le pivot Phase A→C.

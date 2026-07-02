@@ -1,6 +1,20 @@
 # REPRISE — VISUAL-CORE-77 (Cyber-Deck)
 
-> Doc de handoff — session juin 2025. Branche : `master` · repo `sadboypussy/Cdeck`
+> Doc de handoff — mis à jour juil. 2025 · Branche : `master` · repo `sadboypussy/Cdeck`
+
+## Direction produit actuelle
+
+**Lire en priorité :** [`PIVOT V3 — Notes First.md`](PIVOT%20V3%20—%20Notes%20First.md)
+
+Pivot acté (juil. 2025) : notes + navigation clever = **héros** ; musique = **atmosphere** (WASAPI d'abord) ; YouTube / plateformes = **addon optionnel** ; proximité **continue** (rails + ribbon), pas un onglet égal.
+
+Chaîne de valeur :
+
+```
+Musique → Ambiance → Concentration → Pensée → Navigation
+```
+
+---
 
 ## Démarrage sur un autre PC
 
@@ -15,7 +29,9 @@ Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), Web
 
 ---
 
-## État actuel du produit
+## État actuel du code (avant refonte V3)
+
+> L'UI reflète encore l'ancienne hiérarchie (zone vidéo 16:9 + onglets). La refonte layout/proximité est **à faire** — voir roadmap dans le pivot.
 
 ### Ce qui marche
 
@@ -23,11 +39,11 @@ Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), Web
 |------|--------|
 | **Notes** | Éditeur Markdown, wikilinks cliquables, tags, autosave 800 ms |
 | **Enregistrer** | Bouton pill + `Ctrl+S`, état Modifié / Enregistré |
-| **Proximité** | Grille **3×3** : centre = note active, 8 cases = voisins scorés |
-| **Périphériques** | Colonnes gauche/droite translucides (overflow + écho si peu de notes) |
+| **Proximité** | Grille **3×3** (onglet séparé — **à tisser en surface note**) |
+| **Périphériques** | Colonnes gauche/droite dans onglet Proximité |
 | **Moteur liens** | `get_galaxy` Rust : wikilink, backlink, tags, Jaccard mots |
 | **Audio** | WASAPI loopback → FFT → 6 bandes → `audio-bands` @ 60 Hz |
-| **UI audio** | rAF 60 fps, attaque rapide / release doux, waveform sans lag CSS |
+| **UI audio** | rAF 60 fps, attaque rapide / release doux, waveform |
 | **Fenêtre** | Maximize sur **moniteur #2** au démarrage (sinon #1) |
 | **Palette** | `Ctrl+P` recherche + création note |
 | **Debug audio** | `Ctrl+Shift+D` |
@@ -36,7 +52,7 @@ Prérequis : **Node.js**, **Rust**, **Visual Studio Build Tools** (Windows), Web
 
 **Ne pas** ouvrir `index.html` seul — il faut **Tauri** (`npm run dev`).
 
-YouTube : lazy load au ▶. L’audio-réactif marche via **son système** (Spotify, navigateur…) même sans embed.
+L'audio-réactif marche via **son système** (Spotify, navigateur…) — **sans embed**. YouTube lazy au ▶ est un confort optionnel, pas le cœur produit.
 
 ---
 
@@ -45,10 +61,10 @@ YouTube : lazy load au ▶. L’audio-réactif marche via **son système** (Spot
 ```
 src/
   app.js              UI, tabs, save, player, HUD, proximité
-  proximity.js        Grille 3×3 + chips périphériques
+  proximity.js        Grille 3×3 + chips périphériques (→ focus mode V3)
   audio-reactive.js   rAF, lissage asymétrique, bridge WASAPI
   tauri-shim.js       invoke/listen sans bundler npm
-  ambient.js / crt.js Effets zone vidéo
+  ambient.js / crt.js Effets zone vidéo (→ atmosphere globale V3)
 src-tauri/src/
   galaxy.rs           Scoring proximité (core 8 + peripheral 8)
   window.rs           Placement 2ᵉ écran + maximize
@@ -64,17 +80,14 @@ Vault prod : `%APPDATA%/com.cyberdeck.app/vault/`
 
 ---
 
-## UX Proximité (dernière direction validée)
+## Moteur proximité (`galaxy.rs`)
 
-- **Abandon** : radar WebGL, galaxie canvas, onglet Liens cartes
-- **Grille 3×3** : clic voisin → ouvre note dans onglet Notes
-- **Flèches + Entrée** sur onglet Proximité
-- **Suggestions latérales** : notes 9–16 du moteur, ou écho des voisins si vault sparse
+Scoring :
 
-Scoring (`galaxy.rs`) :
-
-- `lien →` : 1.0 · `← backlink` : 0.72 · tags : jusqu’à 0.42 · thème Jaccard : ~0.38
+- `lien →` : 1.0 · `← backlink` : 0.72 · tags : jusqu'à 0.42 · thème Jaccard : ~0.38
 - `MIN_CORE_SCORE` 0.08 · `MIN_PERIPHERAL_SCORE` 0.02
+
+**V3 :** exposer les `reasons` en rails/ribbon permanent, pas seulement dans la grille.
 
 ---
 
@@ -82,10 +95,9 @@ Scoring (`galaxy.rs`) :
 
 **Rust** (`audio/mod.rs`) : emit 16 ms, `smooth_bands_asymmetric` attack 0.78 / release 0.32.
 
-**JS** (`audio-reactive.js`) : `requestAnimationFrame`, pas de `setInterval`. Intensité défaut ~60 % (`Ctrl+Shift+D`).
+**JS** (`audio-reactive.js`) : `requestAnimationFrame`. Intensité défaut ~60 % (`Ctrl+Shift+D`).
 
-Si trop nerveux : baisser `BAND_ATTACK` / `VISUAL_ATTACK` dans `audio-reactive.js`.  
-Si trop mou : augmenter attack Rust ou INT debug.
+**V3 :** prioriser effets sur **texte** (titres, wikilinks, transitions note) vs chrome vidéo.
 
 ---
 
@@ -93,9 +105,7 @@ Si trop mou : augmenter attack Rust ou INT debug.
 
 `src-tauri/src/window.rs` → moniteur index **1** (2ᵉ écran), puis `maximize()`.
 
-Si mauvais écran : ajuster l’index ou filtrer par position (TODO).
-
-`tauri.conf.json` : plus de min/max 405×720 — fenêtre redimensionnable, UI stretch 100 %.
+`tauri.conf.json` : fenêtre redimensionnable, UI stretch 100 %.
 
 ---
 
@@ -104,38 +114,44 @@ Si mauvais écran : ajuster l’index ou filtrer par position (TODO).
 | Symptôme | Cause | Action |
 |----------|-------|--------|
 | `Tracking Prevention blocked storage` | WebView2 + YouTube | Ignorer (cosmétique) |
-| YouTube erreur 150 | Embed interdit | Fallback ambiance OK, WASAPI suffit |
-| Peu de voisins en grille | Vault petit (5 notes seed) | Normal — ajouter notes + `[[liens]]` |
-| ~~Panic `drain(8..)`~~ | **Corrigé** — `skip(8)` safe | — |
+| YouTube erreur 150 | Embed interdit | WASAPI suffit ; embed = addon |
+| Peu de voisins en grille | Vault petit (5 notes seed) | Ajouter notes + `[[liens]]` |
+| UI « lecteur first » | Layout pré-pivot | Refonte Phase A (pivot doc) |
 
 ---
 
 ## Non commité volontairement
 
 - `visual-core-v2 claude remanié.html` — mockup référence UI V2
-- `src/vendor/three/` — legacy radar WebGL (retiré UI, gros volume)
+- `src/vendor/three/` — legacy radar WebGL (retiré UI)
 
 ---
 
-## PDD vs implémentation
+## Traçabilité docs
 
-Écarts assumés par Ben :
-
-- Grille proximité **8 voisins** (PDD disait max 4)
-- Pas de radar / galaxie
-- Fenêtre **maximize 2ᵉ écran** (plus fixe 405×720 strict)
-
-Référence produit : `PDD Cyber-Deck V2.md` · règle Cursor `.cursor/rules/cyber-deck-pdd-core.mdc`
+| Doc | Version | Rôle |
+|-----|---------|------|
+| `PDD Cyber-Deck V2.md` | V1.1 (juin 2025) | Superdocument historique · technique · principes musicaux |
+| **`PIVOT V3 — Notes First.md`** | **V3.0 (juil. 2025)** | **Direction produit actuelle** |
+| `REPRISE.md` | ce fichier | Handoff dev |
+| `.cursor/rules/cyber-deck-pdd-core.mdc` | V3 | Règle agent Cursor |
 
 ---
 
-## Pistes prochaine session
+## Prochaine session — implémentation pivot
 
-1. **Moniteur** : préférence utilisateur ou détection écran « à droite » plutôt qu’index fixe
-2. **Proximité** : plus de notes seed / liens pour tester périphériques réels (overflow 9–16)
-3. **Audio** : affiner INT par défaut après test musique réelle
-4. **README** : encore partiellement « Liens / 405×720 » — à aligner
-5. **Commit suivant** : décider si vendored Three.js reste ou suppression `radar-gl.js`
+Ordre suggéré (détail dans pivot §9) :
+
+1. **Phase A** — Layout : bande ambiance basse repliable ; workzone hero ; YouTube menu source
+2. **Phase B** — Proximité tissée : rails + ribbon ; `Ctrl+Shift+G` focus grille ; retirer onglet
+3. **Phase C** — Feel notes : autocomplete `[[` ; mode lecture ; chips raison
+4. **Phase D** — Menu sources extensible (Spotify backlog)
+
+Autres :
+
+- Moniteur : préférence utilisateur vs index fixe
+- Plus de notes seed pour tester overflow proximité
+- README / PDD historique : ne pas supprimer — pointer vers pivot
 
 ---
 
@@ -147,4 +163,5 @@ npm run test:audio       # spike WASAPI CLI
 cargo check -p cyber-deck --manifest-path src-tauri/Cargo.toml
 ```
 
-Raccourcis in-app : `Ctrl+P` · `Ctrl+S` · `Escape` (HUD) · `Ctrl+Shift+D` (VU)
+Raccourcis in-app : `Ctrl+P` · `Ctrl+S` · `Escape` (HUD) · `Ctrl+Shift+D` (VU)  
+**V3 prévu :** `Ctrl+Shift+G` (focus proximité)
